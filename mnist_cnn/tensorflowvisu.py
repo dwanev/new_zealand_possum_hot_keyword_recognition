@@ -13,11 +13,9 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import tensorflow as tf
-import numpy as np
 import matplotlib.pyplot as plt
-
-
+import numpy as np
+import tensorflow as tf
 
 plt.style.use(["ggplot", "tensorflowvisu.mplstyle"])
 #import matplotlib
@@ -26,7 +24,8 @@ plt.style.use(["ggplot", "tensorflowvisu.mplstyle"])
 import matplotlib.animation as animation
 from matplotlib import rcParams
 import math
-import tensorflowvisu_digits
+from mnist_cnn import tensorflowvisu_digits
+
 tf.set_random_seed(0)
 
 # number of percentile slices for histogram visualisations
