@@ -6,7 +6,7 @@ import os
 import time
 import argparse
 import tensorflow as tf
-#from tensorflow.python.ops.gen_audio_ops import *
+from tensorflow.python.ops.gen_audio_ops import *
 import pyaudio
 
 import wave

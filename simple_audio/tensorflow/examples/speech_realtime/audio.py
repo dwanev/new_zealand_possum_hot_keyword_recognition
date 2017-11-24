@@ -8,7 +8,8 @@ import glob
 import hashlib
 import random
 import numpy as np
-from hot_keyword_recognition_code.utility import Utility
+#from hot_keyword_recognition_code.utility import Utility
+from simple_audio.tensorflow.examples.speech_realtime.utility import Utility
 import matplotlib.pyplot as plt
 
 import tensorflow as tf
@@ -421,7 +422,7 @@ def test_get_batch_data():
 
 
 if __name__ == '__main__':
-    FLAGS, _ = Utility.parse_arg()
+    FLAGS, _ = utility.parse_arg()
 
     test_feature_extractor()
 
