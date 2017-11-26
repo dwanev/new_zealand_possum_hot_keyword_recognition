@@ -106,6 +106,11 @@ def create_model(fingerprint_input, model_settings, model_architecture,
   elif model_architecture == 'low_latency_svdf':
     return create_low_latency_svdf_model(fingerprint_input, model_settings,
                                          is_training, runtime_settings)
+  elif model_architecture == 'deepear_v01':
+      return create_deepear_v01_model(fingerprint_input, model_settings,
+                                      is_training)
+
+
   else:
     raise Exception('model_architecture argument "' + model_architecture +
                     '" not recognized, should be one of "single_fc", "conv",' +
@@ -382,6 +387,10 @@ def create_low_latency_conv_model(fingerprint_input, model_settings,
     return final_fc
 
 
+
+
+
+
 def create_low_latency_svdf_model(fingerprint_input, model_settings,
                                   is_training, runtime_settings):
   """Builds an SVDF model with low compute requirements.
@@ -564,3 +573,65 @@ def create_low_latency_svdf_model(fingerprint_input, model_settings,
     return final_fc, dropout_prob
   else:
     return final_fc
+
+
+def create_deepear_v01_model(fingerprint_input, model_settings, is_training):
+  print('using deepear v01')
+  """
+  
+  TODO complete description
+
+  Here's the layout of the graph:
+
+  (fingerprint_input)
+          v
+      [MatMul]<-(weights)
+          v
+      [BiasAdd]<-(bias)
+          v
+          TODO
+  Args:
+    fingerprint_input: TensorFlow node that will output audio feature vectors.
+    model_settings: Dictionary of information about the model.
+    is_training: Whether the model is going to be used for training.
+
+  Returns:
+    TensorFlow node outputting logits results, and optionally a dropout
+    placeholder.
+  """
+  hidden1_units = 1024
+  hidden2_units = 1024
+  hidden3_units = 1024
+
+  if is_training:
+    dropout_prob = tf.placeholder(tf.float32, name='dropout_prob')
+  fingerprint_size = model_settings['fingerprint_size']
+  label_count = model_settings['label_count']
+  output_units = label_count
+
+  weights1 = tf.Variable(
+      tf.truncated_normal([fingerprint_size, hidden1_units], stddev=0.001), name='weights1')
+  biases1 = tf.Variable(tf.zeros([hidden1_units]), name='biases1')
+  hidden1 = tf.nn.relu(tf.matmul(fingerprint_input, weights1) + biases1)
+
+  weights2 = tf.Variable(
+      tf.truncated_normal([hidden1_units, hidden2_units], stddev=0.001), name='weights2')
+  biases2 = tf.Variable(tf.zeros([hidden2_units]), name='biases2')
+  hidden2 = tf.nn.relu(tf.matmul(hidden1, weights2) + biases2)
+
+  weights3 = tf.Variable(
+      tf.truncated_normal([hidden2_units, hidden3_units], stddev=0.001), name='weights3')
+  biases3 = tf.Variable(tf.zeros([hidden3_units]), name='biases3')
+  hidden3 = tf.nn.relu(tf.matmul(hidden2, weights3) + biases3)
+
+  output_weights = tf.Variable(
+      tf.truncated_normal([hidden3_units, output_units], stddev=0.001), name='output_weights')
+
+  bias = tf.Variable(tf.zeros([label_count]))
+  logits = tf.matmul(hidden3, output_weights) + bias
+
+
+  if is_training:
+    return logits, dropout_prob
+  else:
+    return logits
