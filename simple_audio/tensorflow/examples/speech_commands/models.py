@@ -580,6 +580,9 @@ def create_deepear_v01_model(fingerprint_input, model_settings, is_training):
   """
   
   TODO complete description
+  Final test accuracy = ~68.1% : 1 Hidden Layer of 1024 Nodes
+  
+  
 
   Here's the layout of the graph:
 
@@ -599,37 +602,33 @@ def create_deepear_v01_model(fingerprint_input, model_settings, is_training):
     TensorFlow node outputting logits results, and optionally a dropout
     placeholder.
   """
-  hidden1_units = 1024
-  hidden2_units = 1024
-  hidden3_units = 1024
+  hidden_units_list = [1024,1024,1024]
 
   if is_training:
     dropout_prob = tf.placeholder(tf.float32, name='dropout_prob')
   fingerprint_size = model_settings['fingerprint_size']
   label_count = model_settings['label_count']
-  output_units = label_count
+  previous_layer_values = fingerprint_input
+  previous_layer_size = fingerprint_size
+  #loop building hidden layer each time
+  layer_number=1
+  for hidden_units_size in hidden_units_list:
+    weights = tf.Variable(
+      tf.truncated_normal([previous_layer_size, hidden_units_size], stddev=0.001), name='weights'+str(layer_number))
+    biases = tf.Variable(tf.zeros([hidden_units_size]), name='biases'+str(layer_number))
+    hidden = tf.nn.relu(tf.matmul(previous_layer_values, weights) + biases)
+    if is_training:
+        previous_layer_values = tf.nn.dropout(hidden, dropout_prob)
+    else:
+        previous_layer_values = hidden
+    previous_layer_size = hidden_units_size
+    layer_number +=1
+  #end of loop building hidden layers
 
-  weights1 = tf.Variable(
-      tf.truncated_normal([fingerprint_size, hidden1_units], stddev=0.001), name='weights1')
-  biases1 = tf.Variable(tf.zeros([hidden1_units]), name='biases1')
-  hidden1 = tf.nn.relu(tf.matmul(fingerprint_input, weights1) + biases1)
-
-  weights2 = tf.Variable(
-      tf.truncated_normal([hidden1_units, hidden2_units], stddev=0.001), name='weights2')
-  biases2 = tf.Variable(tf.zeros([hidden2_units]), name='biases2')
-  hidden2 = tf.nn.relu(tf.matmul(hidden1, weights2) + biases2)
-
-  weights3 = tf.Variable(
-      tf.truncated_normal([hidden2_units, hidden3_units], stddev=0.001), name='weights3')
-  biases3 = tf.Variable(tf.zeros([hidden3_units]), name='biases3')
-  hidden3 = tf.nn.relu(tf.matmul(hidden2, weights3) + biases3)
-
-  output_weights = tf.Variable(
-      tf.truncated_normal([hidden3_units, output_units], stddev=0.001), name='output_weights')
-
+  weightsN = tf.Variable(
+      tf.truncated_normal([previous_layer_size, label_count], stddev=0.001), name='weightsN')
   bias = tf.Variable(tf.zeros([label_count]))
-  logits = tf.matmul(hidden3, output_weights) + bias
-
+  logits = tf.matmul(previous_layer_values, weightsN) + bias
 
   if is_training:
     return logits, dropout_prob
