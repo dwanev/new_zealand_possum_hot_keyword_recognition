@@ -622,20 +622,27 @@ def create_deepear_v01_model(fingerprint_input, model_settings, is_training):
   label_count = model_settings['label_count']
   previous_layer_values = fingerprint_input
   previous_layer_size = fingerprint_size
+  nodes_in_layer = [1024,1024]
+
+  layer_number = 0
+  #hidden_units_size = 1024
+  hidden0 = tf.nn.relu(tf.matmul(previous_layer_values, tf.Variable(tf.truncated_normal([previous_layer_size, nodes_in_layer[layer_number]], stddev=0.001), name='weights'+str(layer_number))) + tf.Variable(tf.zeros([nodes_in_layer[layer_number]]), name='biases'+str(layer_number)))
+  if is_training:
+      layer0_values = tf.nn.dropout(hidden0, dropout_prob)
+  else:
+      layer0_values = hidden0
+  previous_layer_size = nodes_in_layer[layer_number]
 
   layer_number = 1
-  hidden1_units_size = 1024
-  hidden1 = tf.nn.relu(tf.matmul(previous_layer_values, tf.Variable(tf.truncated_normal([previous_layer_size, hidden1_units_size], stddev=0.001), name='weights'+str(layer_number))) + tf.Variable(tf.zeros([hidden1_units_size]), name='biases'+str(layer_number)))
+  hidden1 = tf.nn.relu(tf.matmul(layer0_values, tf.Variable(tf.truncated_normal([previous_layer_size, nodes_in_layer[layer_number]], stddev=0.001), name='weights'+str(layer_number))) + tf.Variable(tf.zeros([nodes_in_layer[layer_number]]), name='biases'+str(layer_number)))
   if is_training:
-    previous_layer_values = tf.nn.dropout(hidden1, dropout_prob)
+      layer2_values = tf.nn.dropout(hidden1, dropout_prob)
   else:
-    previous_layer_values = hidden1
-  previous_layer_size = hidden1_units_size
+      layer2_values = hidden1
+  previous_layer_size = nodes_in_layer[layer_number]
 
-  weightsN = tf.Variable(
-      tf.truncated_normal([previous_layer_size, label_count], stddev=0.001), name='weightsN')
-  bias = tf.Variable(tf.zeros([label_count]))
-  logits = tf.matmul(previous_layer_values, weightsN) + bias
+  weightsN = tf.Variable(tf.truncated_normal([previous_layer_size, label_count], stddev=0.001), name='weightsN')
+  logits = tf.matmul(layer2_values, weightsN) + tf.Variable(tf.zeros([label_count]))
 
   if is_training:
     return logits, dropout_prob
