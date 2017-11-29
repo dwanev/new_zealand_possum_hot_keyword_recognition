@@ -73,6 +73,8 @@ from __future__ import print_function
 import argparse
 import os.path
 import sys
+import time
+
 
 import numpy as np
 from six.moves import xrange  # pylint: disable=redefined-builtin
@@ -86,12 +88,13 @@ FLAGS = None
 
 
 def main(_):
+  t1 = time.time()
   # We want to see all the logging messages for this tutorial.
   tf.logging.set_verbosity(tf.logging.INFO)
-
+  tf.logging.info('Flags: %s ', FLAGS)
   # Start a new TensorFlow session.
   sess = tf.InteractiveSession()
-
+  sess.run(tf.Print([1], [1], "checking starting time..."))
   # Begin by making sure we have the training data we need. If you already have
   # training data of your own, use `--data_url= ` on the command line to avoid
   # downloading.
@@ -281,6 +284,9 @@ def main(_):
   tf.logging.info('Confusion Matrix:\n %s' % (total_conf_matrix))
   tf.logging.info('Final test accuracy = %.1f%% (N=%d)' % (total_accuracy * 100,
                                                            set_size))
+  tf.logging.info('Flags: %s ', FLAGS)
+  t2 = time.time()
+  tf.logging.info('running time %d sec',((t2-t1)/60.0))
 
 
 if __name__ == '__main__':
@@ -372,7 +378,7 @@ if __name__ == '__main__':
   parser.add_argument(
       '--how_many_training_steps',
       type=str,
-      default='10,3', # was 15000,3000
+      default='15000,3000', # was 15000,3000
       help='How many training loops to run',)
   parser.add_argument(
       '--eval_step_interval',
@@ -417,7 +423,7 @@ if __name__ == '__main__':
   parser.add_argument(
       '--model_architecture',
       type=str,
-      default='conv',
+      default='deepear_v01',
       help='What model architecture to use')
   parser.add_argument(
       '--check_nans',

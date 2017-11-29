@@ -580,7 +580,20 @@ def create_deepear_v01_model(fingerprint_input, model_settings, is_training):
   """
   
   TODO complete description
-  Final test accuracy = ~68.1% : 1 Hidden Layer of 1024 Nodes
+  
+  Flags: Namespace(background_frequency=0.8, background_volume=0.1, batch_size=100, check_nans=False, 
+  clip_duration_ms=1000, data_dir='/tmp/speech_dataset/', 
+  data_url='http://download.tensorflow.org/data/speech_commands_v0.01.tar.gz', 
+  dct_coefficient_count=40, eval_step_interval=400, how_many_training_steps='15,3', learning_rate='0.001,0.0001', 
+  model_architecture='deepear_v01', sample_rate=16000, save_step_interval=100, silence_percentage=10.0, 
+  start_checkpoint='', summaries_dir='/tmp/retrain_logs', testing_percentage=10, time_shift_ms=100.0, 
+  train_dir='/tmp/speech_commands_train', unknown_percentage=10.0, validation_percentage=10, 
+  wanted_words='yes,no,up,down,left,right,on,off,stop,go', window_size_ms=30.0, window_stride_ms=10.0)
+  
+  Final test accuracy          Model                          Training Steps   
+  ~68.1%                       1 Hidden Layer of 1024 Nodes   15000,3000
+   s
+   
   
   
 
@@ -602,7 +615,6 @@ def create_deepear_v01_model(fingerprint_input, model_settings, is_training):
     TensorFlow node outputting logits results, and optionally a dropout
     placeholder.
   """
-  hidden_units_list = [1024,1024,1024]
 
   if is_training:
     dropout_prob = tf.placeholder(tf.float32, name='dropout_prob')
@@ -610,20 +622,15 @@ def create_deepear_v01_model(fingerprint_input, model_settings, is_training):
   label_count = model_settings['label_count']
   previous_layer_values = fingerprint_input
   previous_layer_size = fingerprint_size
-  #loop building hidden layer each time
-  layer_number=1
-  for hidden_units_size in hidden_units_list:
-    weights = tf.Variable(
-      tf.truncated_normal([previous_layer_size, hidden_units_size], stddev=0.001), name='weights'+str(layer_number))
-    biases = tf.Variable(tf.zeros([hidden_units_size]), name='biases'+str(layer_number))
-    hidden = tf.nn.relu(tf.matmul(previous_layer_values, weights) + biases)
-    if is_training:
-        previous_layer_values = tf.nn.dropout(hidden, dropout_prob)
-    else:
-        previous_layer_values = hidden
-    previous_layer_size = hidden_units_size
-    layer_number +=1
-  #end of loop building hidden layers
+
+  layer_number = 1
+  hidden1_units_size = 1024
+  hidden1 = tf.nn.relu(tf.matmul(previous_layer_values, tf.Variable(tf.truncated_normal([previous_layer_size, hidden1_units_size], stddev=0.001), name='weights'+str(layer_number))) + tf.Variable(tf.zeros([hidden1_units_size]), name='biases'+str(layer_number)))
+  if is_training:
+    previous_layer_values = tf.nn.dropout(hidden1, dropout_prob)
+  else:
+    previous_layer_values = hidden1
+  previous_layer_size = hidden1_units_size
 
   weightsN = tf.Variable(
       tf.truncated_normal([previous_layer_size, label_count], stddev=0.001), name='weightsN')
