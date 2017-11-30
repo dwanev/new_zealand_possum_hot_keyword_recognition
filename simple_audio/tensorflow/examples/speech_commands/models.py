@@ -715,8 +715,8 @@ def create_alexnet_v01_model(fingerprint_input, model_settings, is_training):
 
 
 def create_deepear_v01_model(fingerprint_input, model_settings, is_training):
-print('using deepear v01')
-"""
+  print('using deepear v01')
+  """
   
   TODO complete description
   
@@ -754,7 +754,6 @@ print('using deepear v01')
     TensorFlow node outputting logits results, and optionally a dropout
     placeholder.
   """
-
   if is_training:
     dropout_prob = tf.placeholder(tf.float32, name='dropout_prob')
   fingerprint_size = model_settings['fingerprint_size']
