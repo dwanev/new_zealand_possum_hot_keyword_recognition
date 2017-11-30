@@ -109,7 +109,8 @@ def create_model(fingerprint_input, model_settings, model_architecture,
   elif model_architecture == 'deepear_v01':
       return create_deepear_v01_model(fingerprint_input, model_settings,
                                       is_training)
-
+  elif model_architecture == 'alexnet_v01':
+      return create_alexnet_v01_model()
 
   else:
     raise Exception('model_architecture argument "' + model_architecture +
@@ -575,9 +576,147 @@ def create_low_latency_svdf_model(fingerprint_input, model_settings,
     return final_fc
 
 
+def create_alexnet_v01_model(fingerprint_input, model_settings, is_training):
+    print('using alexnet v01')
+
+    """
+    Here's the layout of the graph:
+
+    (fingerprint_input)
+    v
+    [Conv2D] < -(weights)
+    v
+    [BiasAdd] < -(bias)
+    v
+    [Relu]
+    v
+    [Normalize] <-TODO
+    v
+    [MaxPool]
+    v
+    [Conv2D] < -(weights)
+    v
+    [BiasAdd] < -(bias)
+    v
+    [Relu]
+    v
+    [Normalize] <-TODO
+    v
+    [MaxPool]
+    v
+    [Conv2D] < -(weights)
+    v
+    [BiasAdd] < -(bias)
+    v
+    [Relu]
+    v
+    [Conv2D] < -(weights)
+    v
+    [BiasAdd] < -(bias)
+    v
+    [Relu]
+    v
+    [Conv2D] < -(weights)
+    v
+    [BiasAdd] < -(bias)
+    v
+    [Relu]
+    v
+    [MaxPool]
+    v
+    [MatMul]
+    v
+    [Relu]
+    v
+    [MatMul]
+    v
+    [Relu]
+    v
+    [MatMul]
+    v
+    [Softmax]
+
+    Args:
+    fingerprint_input: TensorFlow node that will output audio feature vectors.
+    model_settings: Dictionary of information about the model.
+    is_training: Whether the model is going to be used for training.
+
+    Returns:
+    TensorFlow node outputting logits results, and optionally  a dropout placeholder.
+    """
+    input_frequency_size = model_settings['dct_coefficient_count']
+    input_time_size = model_settings['spectrogram_length']
+    fingerprint_4d = tf.reshape(fingerprint_input,
+                                [-1, input_time_size, input_frequency_size, 1])
+    fingerprint_size = model_settings['fingerprint_size']
+    label_count = model_settings['label_count']
+
+    #                                                   no idea for the shape, used the same as above
+    weights = {'W_conv1': tf.Variable(tf.truncated_normal([40, 16, 1, 64])),
+               'W_conv2': tf.Variable(tf.truncated_normal([20, 8, 64, 64])),
+               'W_conv3': tf.Variable(tf.truncated_normal([10, 4, 64, 64])),
+               'W_conv4': tf.Variable(tf.truncated_normal([10, 4, 64, 32])),
+               'W_conv5': tf.Variable(tf.truncated_normal([10, 4, 32, 32])),
+               'W_fc1': tf.Variable(tf.truncated_normal([XXX, 1024])),
+               'W_fc2': tf.Variable(tf.truncated_normal([XXX,1024])),
+               'W_fc3': tf.Variable(tf.truncated_normal([XXX, 1024]))}
+
+    #                                use tf.zeros or random
+    biases = {'b_conv1': tf.Variable(tf.zeros([64])),
+               'b_conv2': tf.Variable(tf.zeros([64])),
+               'b_conv3': tf.Variable(tf.zeros([64])),
+               'b_conv4': tf.Variable(tf.zeros([32])),
+               'b_conv5': tf.Variable(tf.zeros([32])),
+               'b_fc1': tf.Variable(tf.zeros([1024])),
+               'b_fc2': tf.Variable(tf.zeros([1024])),
+               'b_fc3': tf.Variable(tf.zeros([1024]))}
+
+    #is there anyreshaping needed?
+
+    if is_training:
+        dropout_prob = tf.placeholder(tf.float32, name='dropout_prob')
+
+    conv1 = tf.nn.conv2d(fingerprint_input, weights['W_conv1'], strides=[1,1,1,1], padding='SAME')+biases['b_conv1']
+    conv1_relu = tf.nn.relu(conv1)
+    #Normalize HERE <-TODO also change input below
+    conv1_pool = tf.nn.max_pool(conv1_relu, ksize=[1,2,2,1], strides=[1,2,2,1], padding='SAME')
+
+    conv2 = tf.nn.conv2d(conv1_pool, weights['W_conv2'], strides=[1, 1, 1, 1], padding='SAME')+biases['b_conv2']
+    conv2_relu = tf.nn.relu(conv2)
+    # Normalize HERE <-TODO also change input below
+    conv2_pool = tf.nn.max_pool(conv2_relu, ksize=[1, 2, 2, 1], strides=[1, 2, 2, 1], padding='SAME')
+
+    conv3 = tf.nn.conv2d(conv2_pool, weights['W_conv3'], strides=[1, 1, 1, 1], padding='SAME')+biases['b_conv3']
+    conv3_relu = tf.nn.relu(conv3)
+
+    conv4 = tf.nn.conv2d(conv3_relu, weights['W_conv4'], strides=[1, 1, 1, 1], padding='SAME')+biases['b_conv4']
+    conv4_relu = tf.nn.relu(conv4)
+
+    conv5 = tf.nn.conv2d(conv4_relu, weights['W_conv5'], strides=[1, 1, 1, 1], padding='SAME')+biases['b_conv5']
+    conv5_relu = tf.nn.relu(conv5)
+    conv5_pool = tf.nn.max_pool(conv5_relu, ksize=[1, 2, 2, 1], strides=[1, 2, 2, 1], padding='SAME')
+
+    #reshape for fully connected layer
+    #                                  WHAT SIZE? <- Same as above
+    flatten = tf.reshape(conv5_pool, [-1, XXX])
+    fc1 = tf.nn.relu(tf.matmul(flatten, weights['W_fc1'])+biases['b_fc1'])
+    if is_training:
+        fc1= tf.nn.dropout(fc1, dropout_prob)
+    fc2 = tf.nn.relu(tf.matmul(fc1, weights['W_fc2']) + biases['b_fc2'])
+    if is_training:
+        fc2 = tf.nn.dropout(fc2, dropout_prob)
+    #Not sure about how this softmax is implemented
+    logits = tf.nn.softmax(tf.matmul(fc2, weights['W_fc3']) + biases['b_fc3'])
+
+    if is_training:
+      return logits, dropout_prob
+    else:
+      return logits
+
+
 def create_deepear_v01_model(fingerprint_input, model_settings, is_training):
-  print('using deepear v01')
-  """
+print('using deepear v01')
+"""
   
   TODO complete description
   
