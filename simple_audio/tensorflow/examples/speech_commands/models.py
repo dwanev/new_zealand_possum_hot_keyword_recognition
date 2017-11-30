@@ -590,12 +590,10 @@ def create_deepear_v01_model(fingerprint_input, model_settings, is_training):
   train_dir='/tmp/speech_commands_train', unknown_percentage=10.0, validation_percentage=10, 
   wanted_words='yes,no,up,down,left,right,on,off,stop,go', window_size_ms=30.0, window_stride_ms=10.0)
   
-  Final test accuracy          Model                          Training Steps   
-  ~68.1%                       1 Hidden Layer of 1024 Nodes   15000,3000
-   s
-   
-  
-  
+  Final test accuracy          Model                          Training Steps     dataset
+  ~68.1%                       1 FC Hidden Layer of 1024 Nodes   15000,3000      wanted_words='yes,no,up,down,left,right,on,off,stop,go'
+  ~22.1%                       2 FC Hidden Layers of 1024 Nodes  15000,3000      wanted_words='yes,no,up,down,left,right,on,off,stop,go'
+   ~8%                         3 FC Hidden Layers of 1024 Nodes  15000,3000      wanted_words='yes,no,up,down,left,right,on,off,stop,go'
 
   Here's the layout of the graph:
 
@@ -622,7 +620,7 @@ def create_deepear_v01_model(fingerprint_input, model_settings, is_training):
   label_count = model_settings['label_count']
   previous_layer_values = fingerprint_input
   previous_layer_size = fingerprint_size
-  nodes_in_layer = [1024,1024]
+  nodes_in_layer = [1024,1024,1024]
 
   layer_number = 0
   #hidden_units_size = 1024
@@ -636,9 +634,17 @@ def create_deepear_v01_model(fingerprint_input, model_settings, is_training):
   layer_number = 1
   hidden1 = tf.nn.relu(tf.matmul(layer0_values, tf.Variable(tf.truncated_normal([previous_layer_size, nodes_in_layer[layer_number]], stddev=0.001), name='weights'+str(layer_number))) + tf.Variable(tf.zeros([nodes_in_layer[layer_number]]), name='biases'+str(layer_number)))
   if is_training:
-      layer2_values = tf.nn.dropout(hidden1, dropout_prob)
+      layer1_values = tf.nn.dropout(hidden1, dropout_prob)
   else:
-      layer2_values = hidden1
+      layer1_values = hidden1
+  previous_layer_size = nodes_in_layer[layer_number]
+
+  layer_number = 2
+  hidden2 = tf.nn.relu(tf.matmul(layer1_values, tf.Variable(tf.truncated_normal([previous_layer_size, nodes_in_layer[layer_number]], stddev=0.001), name='weights'+str(layer_number))) + tf.Variable(tf.zeros([nodes_in_layer[layer_number]]), name='biases'+str(layer_number)))
+  if is_training:
+      layer2_values = tf.nn.dropout(hidden2, dropout_prob)
+  else:
+      layer2_values = hidden2
   previous_layer_size = nodes_in_layer[layer_number]
 
   weightsN = tf.Variable(tf.truncated_normal([previous_layer_size, label_count], stddev=0.001), name='weightsN')
