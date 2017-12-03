@@ -106,6 +106,11 @@ def create_model(fingerprint_input, model_settings, model_architecture,
   elif model_architecture == 'low_latency_svdf':
     return create_low_latency_svdf_model(fingerprint_input, model_settings,
                                          is_training, runtime_settings)
+  elif model_architecture == 'deepear_v01':
+      return create_deepear_v01_model(fingerprint_input, model_settings,
+                                      is_training)
+
+
   else:
     raise Exception('model_architecture argument "' + model_architecture +
                     '" not recognized, should be one of "single_fc", "conv",' +
@@ -382,6 +387,10 @@ def create_low_latency_conv_model(fingerprint_input, model_settings,
     return final_fc
 
 
+
+
+
+
 def create_low_latency_svdf_model(fingerprint_input, model_settings,
                                   is_training, runtime_settings):
   """Builds an SVDF model with low compute requirements.
@@ -564,3 +573,84 @@ def create_low_latency_svdf_model(fingerprint_input, model_settings,
     return final_fc, dropout_prob
   else:
     return final_fc
+
+
+def create_deepear_v01_model(fingerprint_input, model_settings, is_training):
+  print('using deepear v01')
+  """
+  
+  TODO complete description
+  
+  Flags: Namespace(background_frequency=0.8, background_volume=0.1, batch_size=100, check_nans=False, 
+  clip_duration_ms=1000, data_dir='/tmp/speech_dataset/', 
+  data_url='http://download.tensorflow.org/data/speech_commands_v0.01.tar.gz', 
+  dct_coefficient_count=40, eval_step_interval=400, how_many_training_steps='15,3', learning_rate='0.001,0.0001', 
+  model_architecture='deepear_v01', sample_rate=16000, save_step_interval=100, silence_percentage=10.0, 
+  start_checkpoint='', summaries_dir='/tmp/retrain_logs', testing_percentage=10, time_shift_ms=100.0, 
+  train_dir='/tmp/speech_commands_train', unknown_percentage=10.0, validation_percentage=10, 
+  wanted_words='yes,no,up,down,left,right,on,off,stop,go', window_size_ms=30.0, window_stride_ms=10.0)
+  
+  Final test accuracy          Model                          Training Steps     dataset
+  ~68.1%                       1 FC Hidden Layer of 1024 Nodes   15000,3000      wanted_words='yes,no,up,down,left,right,on,off,stop,go'
+  ~22.1%                       2 FC Hidden Layers of 1024 Nodes  15000,3000      wanted_words='yes,no,up,down,left,right,on,off,stop,go'
+   ~8%                         3 FC Hidden Layers of 1024 Nodes  15000,3000      wanted_words='yes,no,up,down,left,right,on,off,stop,go'
+
+  Here's the layout of the graph:
+
+  (fingerprint_input)
+          v
+      [MatMul]<-(weights)
+          v
+      [BiasAdd]<-(bias)
+          v
+          TODO
+  Args:
+    fingerprint_input: TensorFlow node that will output audio feature vectors.
+    model_settings: Dictionary of information about the model.
+    is_training: Whether the model is going to be used for training.
+
+  Returns:
+    TensorFlow node outputting logits results, and optionally a dropout
+    placeholder.
+  """
+
+  if is_training:
+    dropout_prob = tf.placeholder(tf.float32, name='dropout_prob')
+  fingerprint_size = model_settings['fingerprint_size']
+  label_count = model_settings['label_count']
+  previous_layer_values = fingerprint_input
+  previous_layer_size = fingerprint_size
+  nodes_in_layer = [1024,1024,1024]
+
+  layer_number = 0
+  #hidden_units_size = 1024
+  hidden0 = tf.nn.relu(tf.matmul(previous_layer_values, tf.Variable(tf.truncated_normal([previous_layer_size, nodes_in_layer[layer_number]], stddev=0.001), name='weights'+str(layer_number))) + tf.Variable(tf.zeros([nodes_in_layer[layer_number]]), name='biases'+str(layer_number)))
+  if is_training:
+      layer0_values = tf.nn.dropout(hidden0, dropout_prob)
+  else:
+      layer0_values = hidden0
+  previous_layer_size = nodes_in_layer[layer_number]
+
+  layer_number = 1
+  hidden1 = tf.nn.relu(tf.matmul(layer0_values, tf.Variable(tf.truncated_normal([previous_layer_size, nodes_in_layer[layer_number]], stddev=0.001), name='weights'+str(layer_number))) + tf.Variable(tf.zeros([nodes_in_layer[layer_number]]), name='biases'+str(layer_number)))
+  if is_training:
+      layer1_values = tf.nn.dropout(hidden1, dropout_prob)
+  else:
+      layer1_values = hidden1
+  previous_layer_size = nodes_in_layer[layer_number]
+
+  layer_number = 2
+  hidden2 = tf.nn.relu(tf.matmul(layer1_values, tf.Variable(tf.truncated_normal([previous_layer_size, nodes_in_layer[layer_number]], stddev=0.001), name='weights'+str(layer_number))) + tf.Variable(tf.zeros([nodes_in_layer[layer_number]]), name='biases'+str(layer_number)))
+  if is_training:
+      layer2_values = tf.nn.dropout(hidden2, dropout_prob)
+  else:
+      layer2_values = hidden2
+  previous_layer_size = nodes_in_layer[layer_number]
+
+  weightsN = tf.Variable(tf.truncated_normal([previous_layer_size, label_count], stddev=0.001), name='weightsN')
+  logits = tf.matmul(layer2_values, weightsN) + tf.Variable(tf.zeros([label_count]))
+
+  if is_training:
+    return logits, dropout_prob
+  else:
+    return logits

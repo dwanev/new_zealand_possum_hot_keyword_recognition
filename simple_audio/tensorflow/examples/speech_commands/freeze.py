@@ -167,7 +167,7 @@ if __name__ == '__main__':
   parser.add_argument(
       '--start_checkpoint',
       type=str,
-      default='',
+      default='/tmp/speech_commands_train/conv.ckpt-13',
       help='If specified, restore this pretrained model before any training.')
   parser.add_argument(
       '--model_architecture',
@@ -180,6 +180,8 @@ if __name__ == '__main__':
       default='yes,no,up,down,left,right,on,off,stop,go',
       help='Words to use (others will be added to an unknown label)',)
   parser.add_argument(
-      '--output_file', type=str, help='Where to save the frozen graph.')
+      '--output_file', type=str,
+      default='/tmp/my_frozen_graph.pb',
+      help='Where to save the frozen graph.')
   FLAGS, unparsed = parser.parse_known_args()
   tf.app.run(main=main, argv=[sys.argv[0]] + unparsed)
