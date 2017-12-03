@@ -1,3 +1,7 @@
 .idea
 
 *.png
+/simple_audio/tensorflow/contrib/framework/__pycache__/*.pyc
+/simple_audio/tensorflow/contrib/framework/python/ops/__pycache__/*.pyc
+/simple_audio/tensorflow/examples/__pycache__/*.pyc
+/simple_audio/tensorflow/examples/speech_commands/__pycache__/*.pyc
