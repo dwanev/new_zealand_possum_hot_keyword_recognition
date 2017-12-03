@@ -21,7 +21,7 @@ Summary of data folders and sources:
 
 Problems with v0:
 * **Class imbalance**: lots of samples for birds and speech, but very few for possums
-* **Bird quality**: quality is mixed. Lots of samples labelled as birds don't contain birds. Lots of different types of birds are included, and they sound very different. Calls and songs are mixed up. I have lots of other bird data, but I don't think any of it is clearly better. Needs more investigation. In the worst case I can generate a big list of candidate chunks and then listen to them manually and delete the bad ones (already wrote some code to automate this up to clicking an accept/reject button.)
+* **Bird quality**: quality is mixed. Lots of samples labelled as birds don't contain birds. Lots of different types of birds are included, and they sound very different. Calls and songs are mixed up. I have lots of other bird datasets, but I don't think any of them are clearly better. Needs more investigation. If it comes to it I can generate a big list of candidate chunks, listen to them manually and delete the bad ones (I already wrote some code to automate this except for clicking an accept/reject button.)
 
 Initial results of running the Google model on this dataset were poor.
 * Accuracy stats were looking okay in general, but they were awful for possums
