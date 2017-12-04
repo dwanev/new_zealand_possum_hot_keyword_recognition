@@ -651,32 +651,45 @@ def create_alexnet_v01_model(fingerprint_input, model_settings, is_training):
     fingerprint_size = model_settings['fingerprint_size']
     label_count = model_settings['label_count']
 
-    #                                                   no idea for the shape, used the same as above
-    weights = {'W_conv1': tf.Variable(tf.truncated_normal([40, 16, 1, 64])),
-               'W_conv2': tf.Variable(tf.truncated_normal([20, 8, 64, 64])),
-               'W_conv3': tf.Variable(tf.truncated_normal([10, 4, 64, 64])),
-               'W_conv4': tf.Variable(tf.truncated_normal([10, 4, 64, 32])),
-               'W_conv5': tf.Variable(tf.truncated_normal([10, 4, 32, 32])),
-               'W_fc1': tf.Variable(tf.truncated_normal([XXX, 1024])),
-               'W_fc2': tf.Variable(tf.truncated_normal([XXX,1024])),
-               'W_fc3': tf.Variable(tf.truncated_normal([XXX, 1024]))}
+    #AlexNet architecture
+    # Conv1 - 96 kernels of size 11×11×3 with a stride of 4 pixels
+    # Conv2 - 256 kernels of size 5 × 5 × 48
+    # Conv3 - 384 kernels of size 3 × 3 × 256
+    # Conv4 - 384 kernels of size 3 × 3 × 192
+    # Conv5 - 256 kernels of size 3 × 3 × 192
+    # FC1 and 2 - 4096 neurons
+    # last layer - 1000 neurons
+
+    #dropout 0.5
+
+    #      W[x,y,input,output]                         no idea for the shape, used the same as above
+    weights = {'W_conv1': tf.Variable(tf.truncated_normal([11, 11, 1, 3])),
+               'W_conv2': tf.Variable(tf.truncated_normal([5, 5, 3, 48])),
+               'W_conv3': tf.Variable(tf.truncated_normal([3, 3, 48, 256])),
+               'W_conv4': tf.Variable(tf.truncated_normal([3, 3, 256, 192])),
+               'W_conv5': tf.Variable(tf.truncated_normal([3, 3, 192, 32])),
+               'W_fc1': tf.Variable(tf.truncated_normal([32, 4096])),
+               'W_fc2': tf.Variable(tf.truncated_normal([4096,4096])),
+               'W_fc3': tf.Variable(tf.truncated_normal([4096, 1000]))}
 
     #                                use tf.zeros or random
-    biases = {'b_conv1': tf.Variable(tf.zeros([64])),
-               'b_conv2': tf.Variable(tf.zeros([64])),
-               'b_conv3': tf.Variable(tf.zeros([64])),
-               'b_conv4': tf.Variable(tf.zeros([32])),
+    biases = {'b_conv1': tf.Variable(tf.zeros([3])),
+               'b_conv2': tf.Variable(tf.zeros([48])),
+               'b_conv3': tf.Variable(tf.zeros([256])),
+               'b_conv4': tf.Variable(tf.zeros([192])),
                'b_conv5': tf.Variable(tf.zeros([32])),
-               'b_fc1': tf.Variable(tf.zeros([1024])),
-               'b_fc2': tf.Variable(tf.zeros([1024])),
-               'b_fc3': tf.Variable(tf.zeros([1024]))}
+               'b_fc1': tf.Variable(tf.zeros([4096])),
+               'b_fc2': tf.Variable(tf.zeros([4096])),
+               'b_fc3': tf.Variable(tf.zeros([1000]))}
+
 
     #is there anyreshaping needed?
 
     if is_training:
         dropout_prob = tf.placeholder(tf.float32, name='dropout_prob')
-
-    conv1 = tf.nn.conv2d(fingerprint_input, weights['W_conv1'], strides=[1,1,1,1], padding='SAME')+biases['b_conv1']
+    #conv(input, weights, stride, padding)
+    #strides = [1, stride, stride, 1]
+    conv1 = tf.nn.conv2d(fingerprint_4d, weights['W_conv1'], strides=[1,1,1,1], padding='SAME')+biases['b_conv1']
     conv1_relu = tf.nn.relu(conv1)
     #Normalize HERE <-TODO also change input below
     conv1_pool = tf.nn.max_pool(conv1_relu, ksize=[1,2,2,1], strides=[1,2,2,1], padding='SAME')
@@ -698,7 +711,11 @@ def create_alexnet_v01_model(fingerprint_input, model_settings, is_training):
 
     #reshape for fully connected layer
     #                                  WHAT SIZE? <- Same as above
-    flatten = tf.reshape(conv5_pool, [-1, XXX])
+    shape_conv5_pool = conv5_pool.get_shape()
+    #height*width*output size
+    # would weights['W_conv5'][3] work <---- ?
+    num_elem = int(shape_conv5_pool[1]*shape_conv5_pool[2], 32)
+    flatten = tf.reshape(conv5_pool, [-1, num_elem])
     fc1 = tf.nn.relu(tf.matmul(flatten, weights['W_fc1'])+biases['b_fc1'])
     if is_training:
         fc1= tf.nn.dropout(fc1, dropout_prob)
