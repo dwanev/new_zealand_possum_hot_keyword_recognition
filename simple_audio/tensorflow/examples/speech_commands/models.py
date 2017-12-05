@@ -110,7 +110,8 @@ def create_model(fingerprint_input, model_settings, model_architecture,
       return create_deepear_v01_model(fingerprint_input, model_settings,
                                       is_training)
   elif model_architecture == 'alexnet_v01':
-      return create_alexnet_v01_model()
+      return create_alexnet_v01_model(fingerprint_input, model_settings,
+                                      is_training)
 
   else:
     raise Exception('model_architecture argument "' + model_architecture +
@@ -645,7 +646,10 @@ def create_alexnet_v01_model(fingerprint_input, model_settings, is_training):
     TensorFlow node outputting logits results, and optionally  a dropout placeholder.
     """
     input_frequency_size = model_settings['dct_coefficient_count']
+    print('input_frequency_size',input_frequency_size)
     input_time_size = model_settings['spectrogram_length']
+    print('input_time_size',input_time_size)
+    print("input", fingerprint_input)
     fingerprint_4d = tf.reshape(fingerprint_input,
                                 [-1, input_time_size, input_frequency_size, 1])
     fingerprint_size = model_settings['fingerprint_size']
@@ -664,23 +668,23 @@ def create_alexnet_v01_model(fingerprint_input, model_settings, is_training):
 
     #      W[x,y,input,output]                         no idea for the shape, used the same as above
     weights = {'W_conv1': tf.Variable(tf.truncated_normal([11, 11, 1, 3])),
-               'W_conv2': tf.Variable(tf.truncated_normal([5, 5, 3, 48])),
-               'W_conv3': tf.Variable(tf.truncated_normal([3, 3, 48, 256])),
-               'W_conv4': tf.Variable(tf.truncated_normal([3, 3, 256, 192])),
-               'W_conv5': tf.Variable(tf.truncated_normal([3, 3, 192, 32])),
-               'W_fc1': tf.Variable(tf.truncated_normal([32, 4096])),
-               'W_fc2': tf.Variable(tf.truncated_normal([4096,4096])),
-               'W_fc3': tf.Variable(tf.truncated_normal([4096, 1000]))}
+               'W_conv2': tf.Variable(tf.truncated_normal([5, 5, 3, 24])),
+               'W_conv3': tf.Variable(tf.truncated_normal([3, 3, 24, 96])),
+               'W_conv4': tf.Variable(tf.truncated_normal([3, 3, 96, 48])),
+               'W_conv5': tf.Variable(tf.truncated_normal([3, 3, 48, 32])),
+               'W_fc1': tf.Variable(tf.truncated_normal([32, 200])),
+               'W_fc2': tf.Variable(tf.truncated_normal([200,200])),
+               'W_fc3': tf.Variable(tf.truncated_normal([200, 12]))}
 
     #                                use tf.zeros or random
     biases = {'b_conv1': tf.Variable(tf.zeros([3])),
-               'b_conv2': tf.Variable(tf.zeros([48])),
-               'b_conv3': tf.Variable(tf.zeros([256])),
-               'b_conv4': tf.Variable(tf.zeros([192])),
+               'b_conv2': tf.Variable(tf.zeros([24])),
+               'b_conv3': tf.Variable(tf.zeros([96])),
+               'b_conv4': tf.Variable(tf.zeros([48])),
                'b_conv5': tf.Variable(tf.zeros([32])),
-               'b_fc1': tf.Variable(tf.zeros([4096])),
-               'b_fc2': tf.Variable(tf.zeros([4096])),
-               'b_fc3': tf.Variable(tf.zeros([1000]))}
+               'b_fc1': tf.Variable(tf.zeros([200])),
+               'b_fc2': tf.Variable(tf.zeros([200])),
+               'b_fc3': tf.Variable(tf.zeros([12]))}
 
 
     #is there anyreshaping needed?
@@ -688,43 +692,64 @@ def create_alexnet_v01_model(fingerprint_input, model_settings, is_training):
     if is_training:
         dropout_prob = tf.placeholder(tf.float32, name='dropout_prob')
     #conv(input, weights, stride, padding)
-    #strides = [1, stride, stride, 1]
-    conv1 = tf.nn.conv2d(fingerprint_4d, weights['W_conv1'], strides=[1,1,1,1], padding='SAME')+biases['b_conv1']
+    print('input shape', fingerprint_4d.get_shape())
+    #stride of 4
+    conv1 = tf.nn.conv2d(fingerprint_4d, weights['W_conv1'], strides=[1,4,4,1], padding='SAME')
     conv1_relu = tf.nn.relu(conv1)
     #Normalize HERE <-TODO also change input below
-    conv1_pool = tf.nn.max_pool(conv1_relu, ksize=[1,2,2,1], strides=[1,2,2,1], padding='SAME')
+    conv1_norm = tf.nn.local_response_normalization(conv1_relu, 2,
+                                       1*math.exp(-5), 0.75,
+                                       1.0)
+    conv1_pool = tf.nn.max_pool(conv1_norm, ksize=[1,3,3,1], strides=[1,2,2,1], padding='SAME')
+    print('conv1 shape', conv1_pool.get_shape())
 
-    conv2 = tf.nn.conv2d(conv1_pool, weights['W_conv2'], strides=[1, 1, 1, 1], padding='SAME')+biases['b_conv2']
+    conv2 = tf.nn.conv2d(conv1_pool, weights['W_conv2'], strides=[1, 1, 1, 1], padding='SAME')
     conv2_relu = tf.nn.relu(conv2)
     # Normalize HERE <-TODO also change input below
-    conv2_pool = tf.nn.max_pool(conv2_relu, ksize=[1, 2, 2, 1], strides=[1, 2, 2, 1], padding='SAME')
+    conv2_norm = tf.nn.local_response_normalization(conv2_relu, 2,
+                                                    1 * math.exp(-5), 0.75,
+                                                    1.0)
+    conv2_pool = tf.nn.max_pool(conv2_norm, ksize=[1, 3, 3, 1], strides=[1, 2, 2, 1], padding='SAME')
+    print('conv2 shape', conv2_pool.get_shape())
 
-    conv3 = tf.nn.conv2d(conv2_pool, weights['W_conv3'], strides=[1, 1, 1, 1], padding='SAME')+biases['b_conv3']
+    conv3 = tf.nn.conv2d(conv2_pool, weights['W_conv3'], strides=[1, 1, 1, 1], padding='SAME')
     conv3_relu = tf.nn.relu(conv3)
+    print('conv3_relu shape', conv3_relu.get_shape())
 
-    conv4 = tf.nn.conv2d(conv3_relu, weights['W_conv4'], strides=[1, 1, 1, 1], padding='SAME')+biases['b_conv4']
+    conv4 = tf.nn.conv2d(conv3_relu, weights['W_conv4'], strides=[1, 1, 1, 1], padding='SAME')
     conv4_relu = tf.nn.relu(conv4)
+    print('conv4_relu shape', conv4_relu.get_shape())
 
-    conv5 = tf.nn.conv2d(conv4_relu, weights['W_conv5'], strides=[1, 1, 1, 1], padding='SAME')+biases['b_conv5']
+    conv5 = tf.nn.conv2d(conv4_relu, weights['W_conv5'], strides=[1, 1, 1, 1], padding='SAME')
     conv5_relu = tf.nn.relu(conv5)
-    conv5_pool = tf.nn.max_pool(conv5_relu, ksize=[1, 2, 2, 1], strides=[1, 2, 2, 1], padding='SAME')
+    conv5_pool = tf.nn.max_pool(conv5_relu, ksize=[1, 3, 3, 1], strides=[1, 2, 2, 1], padding='SAME')
+    print('conv5_pool shape', conv5_pool.get_shape())
 
     #reshape for fully connected layer
     #                                  WHAT SIZE? <- Same as above
     shape_conv5_pool = conv5_pool.get_shape()
     #height*width*output size
     # would weights['W_conv5'][3] work <---- ?
-    num_elem = int(shape_conv5_pool[1]*shape_conv5_pool[2], 32)
+    num_elem = int(shape_conv5_pool[1]*shape_conv5_pool[2]*32)
+    weights['W_fc1']= tf.Variable(tf.truncated_normal([num_elem, 200]))
+    print("weights['W_fc1']", weights['W_fc1'])
+    print('shape_conv5_pool[1]',shape_conv5_pool[1])
+    print('shape_conv5_pool[2]',shape_conv5_pool[2])
+    print("num_elem", num_elem)
     flatten = tf.reshape(conv5_pool, [-1, num_elem])
     fc1 = tf.nn.relu(tf.matmul(flatten, weights['W_fc1'])+biases['b_fc1'])
+    print('fc1', fc1)
     if is_training:
-        fc1= tf.nn.dropout(fc1, dropout_prob)
+        fc1 = tf.nn.dropout(fc1, dropout_prob)
+        print('dropout')
     fc2 = tf.nn.relu(tf.matmul(fc1, weights['W_fc2']) + biases['b_fc2'])
+    print('fc2', fc2)
     if is_training:
         fc2 = tf.nn.dropout(fc2, dropout_prob)
+        print('dropout')
     #Not sure about how this softmax is implemented
     logits = tf.nn.softmax(tf.matmul(fc2, weights['W_fc3']) + biases['b_fc3'])
-
+    print('logits',logits)
     if is_training:
       return logits, dropout_prob
     else:
