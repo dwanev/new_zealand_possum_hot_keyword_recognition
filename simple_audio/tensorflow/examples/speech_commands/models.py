@@ -666,6 +666,8 @@ def create_alexnet_v01_model(fingerprint_input, model_settings, is_training):
 
     #dropout 0.5
 
+    num_labels = model_settings['label_count']
+
     #      W[x,y,input,output]                         no idea for the shape, used the same as above
     weights = {'W_conv1': tf.Variable(tf.truncated_normal([11, 11, 1, 3])),
                'W_conv2': tf.Variable(tf.truncated_normal([5, 5, 3, 24])),
@@ -674,7 +676,7 @@ def create_alexnet_v01_model(fingerprint_input, model_settings, is_training):
                'W_conv5': tf.Variable(tf.truncated_normal([3, 3, 48, 32])),
                'W_fc1': tf.Variable(tf.truncated_normal([32, 200])),
                'W_fc2': tf.Variable(tf.truncated_normal([200,200])),
-               'W_fc3': tf.Variable(tf.truncated_normal([200, 12]))}
+               'W_fc3': tf.Variable(tf.truncated_normal([200, num_labels]))}
 
     #                                use tf.zeros or random
     biases = {'b_conv1': tf.Variable(tf.zeros([3])),
@@ -684,7 +686,7 @@ def create_alexnet_v01_model(fingerprint_input, model_settings, is_training):
                'b_conv5': tf.Variable(tf.zeros([32])),
                'b_fc1': tf.Variable(tf.zeros([200])),
                'b_fc2': tf.Variable(tf.zeros([200])),
-               'b_fc3': tf.Variable(tf.zeros([12]))}
+               'b_fc3': tf.Variable(tf.zeros([num_labels]))}
 
 
     #is there anyreshaping needed?
@@ -740,15 +742,19 @@ def create_alexnet_v01_model(fingerprint_input, model_settings, is_training):
     fc1 = tf.nn.relu(tf.matmul(flatten, weights['W_fc1'])+biases['b_fc1'])
     print('fc1', fc1)
     if is_training:
-        fc1 = tf.nn.dropout(fc1, dropout_prob)
+        first_dropout = tf.nn.dropout(fc1, dropout_prob)
         print('dropout')
-    fc2 = tf.nn.relu(tf.matmul(fc1, weights['W_fc2']) + biases['b_fc2'])
+    else:
+        first_dropout = fc1
+    fc2 = tf.nn.relu(tf.matmul(first_dropout, weights['W_fc2']) + biases['b_fc2'])
     print('fc2', fc2)
     if is_training:
-        fc2 = tf.nn.dropout(fc2, dropout_prob)
+        second_dropout = tf.nn.dropout(fc2, dropout_prob)
         print('dropout')
+    else:
+        second_dropout = fc2
     #Not sure about how this softmax is implemented
-    logits = tf.nn.softmax(tf.matmul(fc2, weights['W_fc3']) + biases['b_fc3'])
+    logits = tf.nn.softmax(tf.matmul(second_dropout, weights['W_fc3']) + biases['b_fc3'])
     print('logits',logits)
     if is_training:
       return logits, dropout_prob
