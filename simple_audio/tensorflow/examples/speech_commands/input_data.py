@@ -289,6 +289,13 @@ class AudioProcessor(object):
       else:
         self.word_to_index[word] = UNKNOWN_WORD_INDEX
     self.word_to_index[SILENCE_LABEL] = SILENCE_INDEX
+    tf.logging.info('Word indexes:')
+    for i in range(len(wanted_words)+2):
+      str = ''
+      for word in self.word_to_index.keys():
+        if self.word_to_index[word] == i:
+          str = str + word + ' '
+      tf.logging.info(' %d %s ', i, str)
 
   def prepare_background_data(self):
     """Searches a folder for background noise audio, and loads it into memory.
