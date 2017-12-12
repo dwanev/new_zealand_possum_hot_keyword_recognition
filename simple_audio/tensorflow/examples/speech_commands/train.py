@@ -189,8 +189,11 @@ def main(_):
                        FLAGS.model_architecture + '.pbtxt')
 
   # Save list of words.
+  labels_filename = os.path.join(FLAGS.train_dir, FLAGS.model_architecture + '_labels.txt')
+  tf.logging.info('Saving labels to: %s ', labels_filename)
+
   with gfile.GFile(
-      os.path.join(FLAGS.train_dir, FLAGS.model_architecture + '_labels.txt'),
+      labels_filename,
       'w') as f:
     f.write('\n'.join(audio_processor.words_list))
 
@@ -249,6 +252,8 @@ def main(_):
           total_conf_matrix = conf_matrix
         else:
           total_conf_matrix += conf_matrix
+
+      tf.logging.info('Indexes:\n %s', audio_processor.get_index_info())
       tf.logging.info('Confusion Matrix:\n %s' % (total_conf_matrix))
       tf.logging.info('Step %d: Validation accuracy = %.1f%% (N=%d)' %
                       (training_step, total_accuracy * 100, set_size))
@@ -378,17 +383,18 @@ if __name__ == '__main__':
   parser.add_argument(
       '--how_many_training_steps',
       type=str,
-      default='15000,3000', # was 15000,3000
+      default='1000,1000', # was 15000,3000
       help='How many training loops to run',)
   parser.add_argument(
       '--eval_step_interval',
       type=int,
-      default=400,
+      default=100,
       help='How often to evaluate the training results.')
   parser.add_argument(
       '--learning_rate',
       type=str,
-      default='0.001,0.0001',
+      #default='0.001,0.0001',
+      default='0.1,0.01',
       help='How large a learning rate to use when training.')
   parser.add_argument(
       '--batch_size',
@@ -403,7 +409,8 @@ if __name__ == '__main__':
   parser.add_argument(
       '--wanted_words',
       type=str,
-      default='yes,no,up,down,left,right,on,off,stop,go',
+      #default='yes,no,up,down,left,right,on,off,stop,go',
+      default='bed,bird,possum',
       help='Words to use (others will be added to an unknown label)',)
   parser.add_argument(
       '--train_dir',
@@ -423,7 +430,9 @@ if __name__ == '__main__':
   parser.add_argument(
       '--model_architecture',
       type=str,
-      default='alexnet_v01',
+      #default='conv',
+      #default='alexnet_v01',
+      default='deepear_v01',
       help='What model architecture to use')
   parser.add_argument(
       '--check_nans',
