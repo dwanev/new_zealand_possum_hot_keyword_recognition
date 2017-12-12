@@ -805,12 +805,20 @@ def create_deepear_v01_model(fingerprint_input, model_settings, is_training):
   fingerprint_size = model_settings['fingerprint_size']
   label_count = model_settings['label_count']
   previous_layer_values = fingerprint_input
+  tf.logging.info('Number of input values to network (fingerprint_input) %s',str(fingerprint_input.shape))
   previous_layer_size = fingerprint_size
-  nodes_in_layer = [1024,1024,1024]
-
+  hidden_units_size = 1024
+  nodes_in_layer = [hidden_units_size*4,hidden_units_size*4,hidden_units_size*4]
   layer_number = 0
-  #hidden_units_size = 1024
-  hidden0 = tf.nn.relu(tf.matmul(previous_layer_values, tf.Variable(tf.truncated_normal([previous_layer_size, nodes_in_layer[layer_number]], stddev=0.001), name='weights'+str(layer_number))) + tf.Variable(tf.zeros([nodes_in_layer[layer_number]]), name='biases'+str(layer_number)))
+  hidden0 = tf.nn.relu(
+      tf.matmul(
+          previous_layer_values,
+          tf.Variable(
+              tf.truncated_normal(
+                  [previous_layer_size, nodes_in_layer[layer_number]],
+                  stddev=0.001),
+              name='weights'+str(layer_number))
+      ) + tf.Variable(tf.zeros([nodes_in_layer[layer_number]]), name='biases'+str(layer_number)))
   if is_training:
       layer0_values = tf.nn.dropout(hidden0, dropout_prob)
   else:
