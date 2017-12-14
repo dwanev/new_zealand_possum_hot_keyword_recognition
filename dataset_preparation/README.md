@@ -1,6 +1,18 @@
 ## Possum Dataset
 
 ***
+### dataset_v1
+* Variant on v0 that I put together to deal with some problems in v0
+* Bird data: reduced number of samples to reduce class imbalance; tried to improve quality by switching from the freefield1010 dataset to a mix of Kaggle and Warblr (still not sure how much better these are)
+* Possum data: kept both channels (L & R) from the original stereo tracks to give a larger number of samples at the cost of them not being independent
+* Not copied to OneDrive, but...
+* On SherlockML: /projects/possum_project/dataset_v1 
+* This will do for initial testing. Will be replaced with an improved dataset_v2, to include:
+** More possum data (manually cut by Dwane)
+** More background noise data
+** Possibly better bird data if I can work out how to convert .flac -> .wav
+
+***
 ### dataset_v0
 * Created and copied to OneDrive 03-Dec-17
 * .wav files | 2 seconds | mono | 16kHz | 16-bit
