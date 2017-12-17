@@ -1,4 +1,11 @@
 ## Possum Dataset
+***
+### dataset_v2
+* More possum data: 194 mono files
+* More background noise data: added various additional noise files from the British Library Sound archive (rain, wind, hail, traffic, others)
+* Better bird data: 2 sec chunks of warblr and freefield data based around amplitude peaks, then manually screened
+* _nohash_ added to filenames for cats and dogs to ensure that chunks of individual source files are kept in the same train/validation/test splits
+* Uploaded to SherlockML as dataset_v2
 
 ***
 ### dataset_v1
