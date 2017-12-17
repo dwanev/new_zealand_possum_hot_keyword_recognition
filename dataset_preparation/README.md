@@ -7,6 +7,23 @@
 * _nohash_ added to filenames for cats and dogs to ensure that chunks of individual source files are kept in the same train/validation/test splits
 * Uploaded to SherlockML as dataset_v2
 
+| Category |	Count | Source |
+| ---------| -------| -------|
+| bird | 441 | Machine Listening Challenge freefield1010 + Warblr datasets. Originally 10s, split into 2s. Only subset used, manually screen. |
+| cat	| 419 | Kaggle. Originally different lengths, split into 2s. _nohash_. Also a few samples from Random. |
+| dog	| 240 | Kaggle. Originally different lengths, split into 2s. _nohash_. Also a few samples from Random. |
+| groundparrot	| 25 | Kaggle |
+| possum	| 194 | Dwane. Manually split into ~2s chunks. Converted to mono based on left channel.|
+| random	| 230 | Kaggle ESC50. Long recordings splits into 2s |
+| speech	| 600 | Small subset of Google speech_commands. 1s only |
+| Total	| 2199 |  |
+
+Potential improvements:
+* Clean up more bird data
+* Filter the rejected chunks from bird data and consider placing them in the 'random' class
+* Music samples/radio clips/other general background data files
+* Right channel from the possum files?
+
 ***
 ### dataset_v1
 * Variant on v0 that I put together to deal with some problems in v0
