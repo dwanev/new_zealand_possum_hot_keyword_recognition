@@ -5,3 +5,8 @@
 /simple_audio/tensorflow/contrib/framework/python/ops/__pycache__/*.pyc
 /simple_audio/tensorflow/examples/__pycache__/*.pyc
 /simple_audio/tensorflow/examples/speech_commands/__pycache__/*.pyc
+/dataset_preparation/__pycache__
+/simple_audio/__pycache__
+/simple_audio/tensorflow/__pycache__
+/simple_audio/tensorflow/contrib/__pycache__
+/simple_audio/tensorflow/contrib/framework/python/__pycache__

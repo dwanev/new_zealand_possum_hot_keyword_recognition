@@ -1,4 +1,40 @@
 ## Possum Dataset
+***
+### dataset_v2
+* More possum data: 194 mono files
+* More background noise data: added various additional noise files from the British Library Sound archive (rain, wind, hail, traffic, others)
+* Better bird data: 2 sec chunks of warblr and freefield data based around amplitude peaks, then manually screened
+* _nohash_ added to filenames for cats and dogs to ensure that chunks of individual source files are kept in the same train/validation/test splits
+* Uploaded to SherlockML as dataset_v2
+
+| Category |	Count | Source |
+| ---------| -------| -------|
+| bird | 441 | Machine Listening Challenge freefield1010 + Warblr datasets. Originally 10s, split into 2s. Only subset used, manually screen. |
+| cat	| 419 | Kaggle. Originally different lengths, split into 2s. _nohash_. Also a few samples from Random. |
+| dog	| 240 | Kaggle. Originally different lengths, split into 2s. _nohash_. Also a few samples from Random. |
+| groundparrot	| 25 | Kaggle |
+| possum	| 194 | Dwane. Manually split into ~2s chunks. Converted to mono based on left channel.|
+| random	| 230 | Kaggle ESC50. Long recordings splits into 2s |
+| speech	| 600 | Small subset of Google speech_commands. 1s only |
+| Total	| 2199 |  |
+
+Potential improvements:
+* Clean up more bird data
+* Filter the rejected chunks from bird data and consider placing them in the 'random' class
+* Music samples/radio clips/other general background data files
+* Right channel from the possum files?
+
+***
+### dataset_v1
+* Variant on v0 that I put together to deal with some problems in v0
+* Bird data: reduced number of samples to reduce class imbalance; tried to improve quality by switching from the freefield1010 dataset to a mix of Kaggle and Warblr (still not sure how much better these are)
+* Possum data: kept both channels (L & R) from the original stereo tracks to give a larger number of samples at the cost of them not being independent
+* Not copied to OneDrive, but...
+* On SherlockML: /projects/possum_project/dataset_v1 
+* This will do for initial testing. Will be replaced with an improved dataset_v2, to include:
+** More possum data (manually cut by Dwane)
+** More background noise data
+** Possibly better bird data if I can work out how to convert .flac -> .wav
 
 ***
 ### dataset_v0
