@@ -119,6 +119,15 @@ conf_arr_14200_it =  [[13, 0, 0, 0, 0, 0],
  [ 0, 0,  0,  3,  12, 0],
  [ 4, 1,  2,  5,  0,  30]]
 
+conf_arr_19200_it =   [[13,  0,  0,  0,  0,  0],
+ [  0, 33,  1,  4,  0,  1],
+ [  0,  1, 15,  0,  0,  0],
+ [  1,  0,  6, 41,  1,  6],
+ [  0,  0,  1,  4, 10,  0],
+ [  2,  1,  1,  7,  0, 31]]
+
+
+
 conf_convnet = [[12, 0, 0, 0, 0, 0],
 [1, 30, 0, 2, 1, 2],
 [0, 0, 13, 3, 0, 1],
@@ -136,5 +145,8 @@ create_pretty_conf_matrix_and_save(labels,conf_arr_100_it,'deep_ear_100_it.png')
 create_pretty_conf_matrix_and_save(labels,conf_arr_6000_it,'deep_ear_6000_it.png')
 create_pretty_conf_matrix_and_save(labels,conf_arr_9200_it,'deep_ear_9200_it.png')
 create_pretty_conf_matrix_and_save(labels,conf_arr_14200_it,'deep_ear_14200_it.png')
+create_pretty_conf_matrix_and_save(labels,conf_arr_19200_it,'deep_ear_19200_it.png')
+
+
 create_pretty_conf_matrix_and_save(labels,conf_convnet,'convnet_.png')
 
