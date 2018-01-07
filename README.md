@@ -1,9 +1,9 @@
 # Deep Networks for Possum Call Detection
 
-Dwane van der Sluis     17127987 \
-Richard Sterry          17115509 \
-Filip Svoboda           17044637 \
-Hadrien de Vaucleroy    13034248             
+Dwane van der Sluis     17127987     ucabdv1@ucl.ac.uk\
+Richard Sterry          17115509     filip.svoboda.17@ucl.ac.uk \
+Filip Svoboda           17044637     filip.svoboda.17@ucl.ac.uk \
+Hadrien de Vaucleroy    13034248     hadrien.vaucleroy.17@ucl.ac.uk             
  
 
 **To train a model and save it to disk use:**
