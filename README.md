@@ -1,24 +1,50 @@
-# GI23_GP
+# Deep Networks for Possum Call Detection
 
-
-**To run real-time inference use:**
-
-simple_audio.tensorflow.examples.speech_realtime.inference_continuous.py
+Dwane van der Sluis     17127987 \
+Richard Sterry          17115509 \
+Filip Svoboda           17044637 \
+Hadrien de Vaucleroy    13034248             
+ 
 
 **To train a model and save it to disk use:**
 
 simple_audio.tensorflow.examples.speech_commands.train.py
 
+An example of the most cammon switches is:
+simple_audio/tensorflow/examples/speech_commands/train.py --data_url= \
+    --data_dir=/project/possum_project/dataset_v2/ \
+    --wanted_words=possum,cat,dog,bird --clip_duration_ms=2000 \
+    --train_dir=/project/possum_project/tmp/v2_de_01_train/ \
+    --summaries_dir=/project/possum_project/tmp/v2_de_01_retrain_logs \
+    --learning_rate=0.1,0.01,0.001 \
+    --how_many_training_steps=10000,10000,10000 \
+    --unknown_percentage=30.0 \
+    --background_volume=0.5 \
+    --model_architecture=deepear_v01
+
+
+
 **To take a model and 'freeze' it so it can be used in realtime inferencing use:**
 
 simple_audio.tensorflow.examples.speech_commands.freeze.py
 
+**To run real-time inference use:**
 
-# Dependencies
+simple_audio.tensorflow.examples.speech_realtime.inference_continuous.py
 
-tf-nightly 
-python 3.6
 
+**Code Layout**
+
+Data created by us is in /data /
+Data collected from else where is in a separate file available here : TODO / 
+Code to collect and collate data is in /datset_preparation /
+Code to train networks is in /simple_audio   /
+Code to create spectrograms is in / spectrograms 
+
+**Dependencies**
+
+tf-nightly (r1.5)
+python 3.6.2
 
 **iOS Setup**
 
@@ -70,8 +96,8 @@ Uninstall html5lib from conda with the following commands:
 	conda remove html5lib
 	conda install pip
 	
-
-    
+**rasparian setup**
+    To be completed
     
     
     
