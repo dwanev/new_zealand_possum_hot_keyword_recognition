@@ -137,6 +137,12 @@ conf_convnet = [[12, 0, 0, 0, 0, 0],
 
 
 
+conf_alexnet = [[13, 0, 0, 0, 0, 0],
+[0, 9, 0, 2, 1, 1],
+[0, 0, 16, 0, 0, 0],
+[0, 0, 0, 46, 1, 8],
+[0, 0, 0, 1, 14, 0],
+[1, 2, 0, 4, 0, 37]]
 
 labels = ['silence', 'unknown', 'possum', 'cat', 'dog', 'bird']
 
@@ -146,6 +152,7 @@ create_pretty_conf_matrix_and_save(labels,conf_arr_6000_it,'deep_ear_6000_it.png
 create_pretty_conf_matrix_and_save(labels,conf_arr_9200_it,'deep_ear_9200_it.png')
 create_pretty_conf_matrix_and_save(labels,conf_arr_14200_it,'deep_ear_14200_it.png')
 create_pretty_conf_matrix_and_save(labels,conf_arr_19200_it,'deep_ear_19200_it.png')
+create_pretty_conf_matrix_and_save(labels,conf_alexnet,'alexnet.png')
 
 
 create_pretty_conf_matrix_and_save(labels,conf_convnet,'convnet_.png')
