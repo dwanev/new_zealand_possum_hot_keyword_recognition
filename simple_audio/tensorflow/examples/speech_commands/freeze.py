@@ -142,7 +142,7 @@ if __name__ == '__main__':
   parser.add_argument(
       '--clip_duration_ms',
       type=int,
-      default=1000,
+      default=2000,
       help='Expected duration in milliseconds of the wavs',)
   parser.add_argument(
       '--clip_stride_ms',
@@ -167,7 +167,7 @@ if __name__ == '__main__':
   parser.add_argument(
       '--start_checkpoint',
       type=str,
-      default='/tmp/speech_commands_train/conv.ckpt-13',
+      default='/tmp/speech_commands_train/conv.ckpt-1600',
       help='If specified, restore this pretrained model before any training.')
   parser.add_argument(
       '--model_architecture',
@@ -177,7 +177,7 @@ if __name__ == '__main__':
   parser.add_argument(
       '--wanted_words',
       type=str,
-      default='yes,no,up,down,left,right,on,off,stop,go',
+      default='possum,cat,dog,bird',
       help='Words to use (others will be added to an unknown label)',)
   parser.add_argument(
       '--output_file', type=str,

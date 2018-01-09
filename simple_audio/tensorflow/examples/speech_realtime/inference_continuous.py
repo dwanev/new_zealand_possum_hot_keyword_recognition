@@ -115,6 +115,7 @@ def execute_graph(wav_data, labels, input_layer_name='wav_data:0', output_layer_
 
         #print('\n[*] Predictions =>')
         for i, node_id in enumerate(top_k):
+            print('%d ' % (node_id), end='')
             human_string = labels[node_id]
             score = predictions[node_id]
             #print('\t[Top-%d] %s \t(score = %.5f)' % (i+1, human_string, score))
