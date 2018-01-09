@@ -154,8 +154,12 @@ def main(_):
   with tf.name_scope('train'), tf.control_dependencies(control_dependencies):
     learning_rate_input = tf.placeholder(
         tf.float32, [], name='learning_rate_input')
-    train_step = tf.train.GradientDescentOptimizer(
-        learning_rate_input).minimize(cross_entropy_mean)
+  if (FLAGS.optimizer == 'sgd'):
+      train_step = tf.train.GradientDescentOptimizer(
+          learning_rate_input).minimize(cross_entropy_mean)
+  else:
+      train_step = tf.train.AdamOptimizer().minimize(cross_entropy_mean)
+
   predicted_indices = tf.argmax(logits, 1)
   expected_indices = tf.argmax(ground_truth_input, 1)
   correct_prediction = tf.equal(predicted_indices, expected_indices)
@@ -306,14 +310,21 @@ if __name__ == '__main__':
   parser.add_argument(
       '--data_dir',
       type=str,
-      default='/tmp/speech_dataset/',
+      default='/tmp/dataset_v2/',
       help="""\
       Where to download the speech training data to.
       """)
   parser.add_argument(
+      '--optimizer',
+      type=str,
+      default='adam',
+      help="""\
+      adam or sgd
+      """)
+  parser.add_argument(
       '--background_volume',
       type=float,
-      default=0.1,
+      default=1.0,
       help="""\
       How loud the background noise should be, between 0 and 1.
       """)
@@ -334,7 +345,7 @@ if __name__ == '__main__':
   parser.add_argument(
       '--unknown_percentage',
       type=float,
-      default=10.0,
+      default=30.0,
       help="""\
       How much of the training data should be unknown words.
       """)
@@ -363,7 +374,7 @@ if __name__ == '__main__':
   parser.add_argument(
       '--clip_duration_ms',
       type=int,
-      default=1000,
+      default=2000,
       help='Expected duration in milliseconds of the wavs',)
   parser.add_argument(
       '--window_size_ms',
@@ -410,7 +421,7 @@ if __name__ == '__main__':
       '--wanted_words',
       type=str,
       #default='yes,no,up,down,left,right,on,off,stop,go',
-      default='bed,bird,possum',
+      default='possum,cat,dog,bird',
       help='Words to use (others will be added to an unknown label)',)
   parser.add_argument(
       '--train_dir',
@@ -428,17 +439,17 @@ if __name__ == '__main__':
       default='',
       help='If specified, restore this pretrained model before any training.')
   parser.add_argument(
-      '--model_architecture',
-      type=str,
-      #default='conv',
-      #default='alexnet_v01',
-      default='deepear_v01',
-      help='What model architecture to use')
-  parser.add_argument(
       '--check_nans',
       type=bool,
-      default=False,
+      default=True,
       help='Whether to check for invalid numbers during processing')
+  parser.add_argument(
+      '--model_architecture',
+      type=str,
+      default='conv',
+      #default='alexnet_v01',
+      #default='deepear_v01',
+      help='What model architecture to use')
 
   FLAGS, unparsed = parser.parse_known_args()
   tf.app.run(main=main, argv=[sys.argv[0]] + unparsed)
