@@ -83,6 +83,7 @@ import tensorflow as tf
 import simple_audio.tensorflow.examples.speech_commands.input_data as input_data
 import simple_audio.tensorflow.examples.speech_commands.models as models
 from tensorflow.python.platform import gfile
+from simple_audio.tensorflow.examples.speech_commands.plot_confusion_matrix import get_precision_and_recall_from_confusion_matrix
 
 FLAGS = None
 
@@ -181,6 +182,7 @@ def main(_):
   tf.global_variables_initializer().run()
 
   start_step = 1
+  terminate_now = False
 
   if FLAGS.start_checkpoint:
     models.load_variables_from_checkpoint(sess, FLAGS.start_checkpoint)
@@ -262,13 +264,28 @@ def main(_):
       tf.logging.info('Step %d: Validation accuracy = %.1f%% (N=%d)' %
                       (training_step, total_accuracy * 100, set_size))
 
+      if (FLAGS.index_of_early_termination_class >= 0):
+          precision, recall = get_precision_and_recall_from_confusion_matrix(total_conf_matrix, FLAGS.index_of_early_termination_class)
+          tf.logging.info('Class %d Precision = %.1f%% ' % (FLAGS.index_of_early_termination_class, precision * 100))
+          tf.logging.info('Class %d Recall = %.1f%% ' % (FLAGS.index_of_early_termination_class, recall * 100))
+          if precision > 0.99999 and recall > 0.99999:
+              terminate_now = True
+
     # Save the model checkpoint periodically.
     if (training_step % FLAGS.save_step_interval == 0 or
-        training_step == training_steps_max):
+        training_step == training_steps_max or terminate_now):
       checkpoint_path = os.path.join(FLAGS.train_dir,
                                      FLAGS.model_architecture + '.ckpt')
       tf.logging.info('Saving to "%s-%d"', checkpoint_path, training_step)
       saver.save(sess, checkpoint_path, global_step=training_step)
+
+    # Early termination
+    if terminate_now:
+        checkpoint_path = os.path.join(FLAGS.train_dir,
+                                       FLAGS.model_architecture + '.ckpt')
+        tf.logging.info('Saving to "%s-%d"', checkpoint_path, training_step)
+        saver.save(sess, checkpoint_path, global_step=training_step)
+        break
 
   set_size = audio_processor.set_size('testing')
   tf.logging.info('set_size=%d', set_size)
@@ -300,6 +317,14 @@ def main(_):
 
 if __name__ == '__main__':
   parser = argparse.ArgumentParser()
+
+
+  parser.add_argument(
+      '--index_of_early_termination_class',
+      type=int,
+      default=2,
+      help='index in the class array, of the class that if we get 100% precision and recall we terminate')
+
   parser.add_argument(
       '--data_url',
       type=str,
