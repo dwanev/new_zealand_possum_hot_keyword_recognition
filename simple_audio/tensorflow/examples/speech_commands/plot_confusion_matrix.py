@@ -40,15 +40,15 @@ def get_key_values_from_confusion_matrix(conf_arr):
 
 
 def get_precision_and_recall_from_confusion_matrix(conf_arr, index):
-    precision_sum = np.sum(conf_arr, axis=1)
-    recall_sum = np.sum(conf_arr, axis=0)
-    precision = 0.0
+    recall_sum = np.sum(conf_arr, axis=1)
+    precision_sum = np.sum(conf_arr, axis=0)
     recall = 0.0
-    if precision_sum[index] > 0.0:
-        precision = conf_arr[index][index]/precision_sum[index]
+    precision = 0.0
     if recall_sum[index] > 0.0:
         recall = conf_arr[index][index]/recall_sum[index]
-    return precision, recall
+    if precision_sum[index] > 0.0:
+        precision = conf_arr[index][index]/precision_sum[index]
+    return recall, precision
 
 def calc_nomalised_array(conf_arr):
     norm_conf = []
@@ -160,13 +160,13 @@ def produce_charts():
 
 
 def run_test(index = 2):
-    conf_arr =  [[12,  0,  0,  0,  0,  0],
- [ 1, 27,  0,  1,  0,  7],
- [ 3,  0, 14,  0,  0,  0],
- [ 0,  2,  3, 20,  0,  3],
- [ 0,  0,  1,  4, 27,  0],
- [ 0,  5,  4,  0,  1, 33]]
-    precision, recall  = get_precision_and_recall_from_confusion_matrix(conf_arr, index)
+    conf_arr =  [[ 0,  0,  0,  0,  0,  0],
+                 [ 0,  0,  0,  0,  0,  0],
+                 [ 3,  0, 14,  0,  0,  0],
+                 [ 0,  0,  0,  0,  0,  0],
+                 [ 0,  0,  1,  0,  0,  0],
+                 [ 0,  0,  0,  0,  0,  0]]
+    recall, precision = get_precision_and_recall_from_confusion_matrix(conf_arr, index)
     print(precision)
     print(recall)
 

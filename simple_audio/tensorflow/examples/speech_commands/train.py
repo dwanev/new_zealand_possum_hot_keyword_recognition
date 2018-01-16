@@ -286,10 +286,11 @@ def main(_):
                       (training_step, total_accuracy * 100, set_size))
 
       if (FLAGS.index_of_early_termination_class >= 0):
-          precision, recall = get_precision_and_recall_from_confusion_matrix(total_conf_matrix, FLAGS.index_of_early_termination_class)
-          tf.logging.info('Class %d Precision = %.1f%% ' % (FLAGS.index_of_early_termination_class, precision * 100))
-          tf.logging.info('Class %d Recall = %.1f%% ' % (FLAGS.index_of_early_termination_class, recall * 100))
-          if precision > 0.99999 and recall > 0.99999:
+          recall, precision = get_precision_and_recall_from_confusion_matrix(total_conf_matrix, FLAGS.index_of_early_termination_class)
+          tf.logging.info('Class %d Precision = %.1f%% ' % (FLAGS.index_of_early_termination_class, precision))
+          tf.logging.info('Class %d Recall = %.1f%% ' % (FLAGS.index_of_early_termination_class, recall))
+          tf.logging.info('Summary: Step:%d Class %d Recall:%.2f Class %d Precision: %.2f Validation Accuracy:%.2f' % (training_step,FLAGS.index_of_early_termination_class, recall,FLAGS.index_of_early_termination_class, precision, total_accuracy))
+          if precision > 0.99999 and recall > 0.5:
               terminate_now = True
 
     # Save the model checkpoint periodically.
@@ -440,7 +441,7 @@ if __name__ == '__main__':
   parser.add_argument(
       '--how_many_training_steps',
       type=str,
-      default='1000,1000', # was 15000,3000
+      default='100,1000,10000', # was 15000,3000
       help='How many training loops to run',)
   parser.add_argument(
       '--eval_step_interval',
@@ -451,7 +452,7 @@ if __name__ == '__main__':
       '--learning_rate',
       type=str,
       #default='0.001,0.0001',
-      default='0.1,0.01',
+      default='0.1,0.001,0.001',
       help='How large a learning rate to use when training.')
   parser.add_argument(
       '--batch_size',
