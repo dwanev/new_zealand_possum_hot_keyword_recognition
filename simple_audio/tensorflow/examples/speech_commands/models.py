@@ -108,7 +108,10 @@ def create_model(fingerprint_input, model_settings, model_architecture,
                                              is_training, runtime_settings)
     elif model_architecture == 'deepear_v01':
         return create_deepear_v01_model(fingerprint_input, model_settings,
-                                        is_training)
+                                        is_training, 4)
+    elif model_architecture == 'deepear_v02':
+        return create_deepear_v01_model(fingerprint_input, model_settings,
+                                        is_training, 1)
     elif model_architecture == 'alexnet_v01':
         return create_alexnet_v01_model(fingerprint_input, model_settings,
                                         is_training)
@@ -981,29 +984,27 @@ def create_alexnet_adapt_model(fingerprint_input, model_settings, is_training):
     else:
         return final_fc
 
-
-def create_deepear_v01_model(fingerprint_input, model_settings, is_training):
-    print('using deepear v01')
+def create_deepear_v01_model(fingerprint_input, model_settings, is_training, size_multiplier):
     """
-  
+
     TODO complete description
-  
-    Flags: Namespace(background_frequency=0.8, background_volume=0.1, batch_size=100, check_nans=False, 
-    clip_duration_ms=1000, data_dir='/tmp/speech_dataset/', 
-    data_url='http://download.tensorflow.org/data/speech_commands_v0.01.tar.gz', 
-    dct_coefficient_count=40, eval_step_interval=400, how_many_training_steps='15,3', learning_rate='0.001,0.0001', 
-    model_architecture='deepear_v01', sample_rate=16000, save_step_interval=100, silence_percentage=10.0, 
-    start_checkpoint='', summaries_dir='/tmp/retrain_logs', testing_percentage=10, time_shift_ms=100.0, 
-    train_dir='/tmp/speech_commands_train', unknown_percentage=10.0, validation_percentage=10, 
+
+    Flags: Namespace(background_frequency=0.8, background_volume=0.1, batch_size=100, check_nans=False,
+    clip_duration_ms=1000, data_dir='/tmp/speech_dataset/',
+    data_url='http://download.tensorflow.org/data/speech_commands_v0.01.tar.gz',
+    dct_coefficient_count=40, eval_step_interval=400, how_many_training_steps='15,3', learning_rate='0.001,0.0001',
+    model_architecture='deepear_v01', sample_rate=16000, save_step_interval=100, silence_percentage=10.0,
+    start_checkpoint='', summaries_dir='/tmp/retrain_logs', testing_percentage=10, time_shift_ms=100.0,
+    train_dir='/tmp/speech_commands_train', unknown_percentage=10.0, validation_percentage=10,
     wanted_words='yes,no,up,down,left,right,on,off,stop,go', window_size_ms=30.0, window_stride_ms=10.0)
-  
+
     Final test accuracy          Model                          Training Steps     dataset
     ~68.1%                       1 FC Hidden Layer of 1024 Nodes   15000,3000      wanted_words='yes,no,up,down,left,right,on,off,stop,go'
     ~22.1%                       2 FC Hidden Layers of 1024 Nodes  15000,3000      wanted_words='yes,no,up,down,left,right,on,off,stop,go'
      ~8%                         3 FC Hidden Layers of 1024 Nodes  15000,3000      wanted_words='yes,no,up,down,left,right,on,off,stop,go'
-  
+
     Here's the layout of the graph:
-  
+
     (fingerprint_input)
             v
         [MatMul]<-(weights)
@@ -1015,7 +1016,7 @@ def create_deepear_v01_model(fingerprint_input, model_settings, is_training):
       fingerprint_input: TensorFlow node that will output audio feature vectors.
       model_settings: Dictionary of information about the model.
       is_training: Whether the model is going to be used for training.
-  
+
     Returns:
       TensorFlow node outputting logits results, and optionally a dropout
       placeholder.
@@ -1028,7 +1029,8 @@ def create_deepear_v01_model(fingerprint_input, model_settings, is_training):
     tf.logging.info('Number of input values to network (fingerprint_input) %s', str(fingerprint_input.shape))
     previous_layer_size = fingerprint_size
     hidden_units_size = 1024
-    nodes_in_layer = [hidden_units_size * 4, hidden_units_size * 4, hidden_units_size * 4]
+
+    nodes_in_layer = [hidden_units_size * size_multiplier, hidden_units_size * size_multiplier, hidden_units_size * size_multiplier]
     layer_number = 0
     hidden0 = tf.nn.relu(
         tf.matmul(
