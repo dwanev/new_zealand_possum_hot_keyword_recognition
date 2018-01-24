@@ -74,7 +74,7 @@ import argparse
 import os.path
 import sys
 import time
-
+import logging
 
 import numpy as np
 from six.moves import xrange  # pylint: disable=redefined-builtin
@@ -83,6 +83,8 @@ import tensorflow as tf
 import simple_audio.tensorflow.examples.speech_commands.input_data as input_data
 import simple_audio.tensorflow.examples.speech_commands.models as models
 from tensorflow.python.platform import gfile
+from simple_audio.tensorflow.examples.speech_commands.plot_confusion_matrix import get_precision_and_recall_from_confusion_matrix
+import simple_audio.tensorflow.examples.speech_commands.extract_tf_logs as etl
 
 FLAGS = None
 
@@ -174,13 +176,34 @@ def main(_):
 
   # Merge all the summaries and write them out to /tmp/retrain_logs (by default)
   merged_summaries = tf.summary.merge_all()
-  train_writer = tf.summary.FileWriter(FLAGS.summaries_dir + '/train',
+
+  parent_train_dir = FLAGS.parent_output_dir + '/' + FLAGS.model_architecture
+  tf.logging.info('Logging to: %s ', parent_train_dir)
+
+  ## force tensor flow logging to this dir
+  os.makedirs(parent_train_dir, exist_ok=True)
+  log_file = os.path.join(parent_train_dir, "tensorflow.log")
+  print(log_file)
+  # get TF logger
+  log = logging.getLogger('tensorflow')
+  log.setLevel(logging.DEBUG)
+  # create formatter and add it to the handlers
+  formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+  # create file handler which logs even debug messages
+  fh = logging.FileHandler(log_file)
+  fh.setLevel(logging.DEBUG)
+  fh.setFormatter(formatter)
+  log.addHandler(fh)
+
+
+  train_writer = tf.summary.FileWriter(parent_train_dir + '/train',
                                        sess.graph)
-  validation_writer = tf.summary.FileWriter(FLAGS.summaries_dir + '/validation')
+  validation_writer = tf.summary.FileWriter(parent_train_dir  + '/validation')
 
   tf.global_variables_initializer().run()
 
   start_step = 1
+  terminate_now = False
 
   if FLAGS.start_checkpoint:
     models.load_variables_from_checkpoint(sess, FLAGS.start_checkpoint)
@@ -189,11 +212,11 @@ def main(_):
   tf.logging.info('Training from step: %d ', start_step)
 
   # Save graph.pbtxt.
-  tf.train.write_graph(sess.graph_def, FLAGS.train_dir,
+  tf.train.write_graph(sess.graph_def, parent_train_dir,
                        FLAGS.model_architecture + '.pbtxt')
 
   # Save list of words.
-  labels_filename = os.path.join(FLAGS.train_dir, FLAGS.model_architecture + '_labels.txt')
+  labels_filename = os.path.join(parent_train_dir, FLAGS.model_architecture + '_labels.txt')
   tf.logging.info('Saving labels to: %s ', labels_filename)
 
   with gfile.GFile(
@@ -262,13 +285,29 @@ def main(_):
       tf.logging.info('Step %d: Validation accuracy = %.1f%% (N=%d)' %
                       (training_step, total_accuracy * 100, set_size))
 
+      if (FLAGS.index_of_early_termination_class >= 0):
+          recall, precision = get_precision_and_recall_from_confusion_matrix(total_conf_matrix, FLAGS.index_of_early_termination_class)
+          tf.logging.info('Class %d Precision = %.1f%% ' % (FLAGS.index_of_early_termination_class, precision))
+          tf.logging.info('Class %d Recall = %.1f%% ' % (FLAGS.index_of_early_termination_class, recall))
+          tf.logging.info('Summary: Step:%d Class %d Recall:%.2f Class %d Precision: %.2f Validation Accuracy:%.2f' % (training_step,FLAGS.index_of_early_termination_class, recall,FLAGS.index_of_early_termination_class, precision, total_accuracy))
+          if precision > 0.99999 and recall > 0.5:
+              terminate_now = True
+
     # Save the model checkpoint periodically.
     if (training_step % FLAGS.save_step_interval == 0 or
-        training_step == training_steps_max):
-      checkpoint_path = os.path.join(FLAGS.train_dir,
+        training_step == training_steps_max or terminate_now):
+      checkpoint_path = os.path.join(parent_train_dir,
                                      FLAGS.model_architecture + '.ckpt')
       tf.logging.info('Saving to "%s-%d"', checkpoint_path, training_step)
       saver.save(sess, checkpoint_path, global_step=training_step)
+
+    # Early termination
+    if terminate_now:
+        checkpoint_path = os.path.join(parent_train_dir,
+                                       FLAGS.model_architecture + '.ckpt')
+        tf.logging.info('Saving to "%s-%d"', checkpoint_path, training_step)
+        saver.save(sess, checkpoint_path, global_step=training_step)
+        break
 
   set_size = audio_processor.set_size('testing')
   tf.logging.info('set_size=%d', set_size)
@@ -296,10 +335,18 @@ def main(_):
   tf.logging.info('Flags: %s ', FLAGS)
   t2 = time.time()
   tf.logging.info('running time %d sec',((t2-t1)/60.0))
+  # parse event logs and produce error graphs
+  etl.plot_loss_and_accuracy(FLAGS.parent_output_dir + '/' + FLAGS.model_architecture)
 
 
 if __name__ == '__main__':
   parser = argparse.ArgumentParser()
+  parser.add_argument(
+      '--index_of_early_termination_class',
+      type=int,
+      default=2,
+      help='index in the class array, of the class that if we get 100% precision and recall we terminate')
+
   parser.add_argument(
       '--data_url',
       type=str,
@@ -394,7 +441,7 @@ if __name__ == '__main__':
   parser.add_argument(
       '--how_many_training_steps',
       type=str,
-      default='1000,1000', # was 15000,3000
+      default='100,1000,10000', # was 15000,3000
       help='How many training loops to run',)
   parser.add_argument(
       '--eval_step_interval',
@@ -405,7 +452,7 @@ if __name__ == '__main__':
       '--learning_rate',
       type=str,
       #default='0.001,0.0001',
-      default='0.1,0.01',
+      default='0.1,0.001,0.001',
       help='How large a learning rate to use when training.')
   parser.add_argument(
       '--batch_size',
@@ -413,10 +460,10 @@ if __name__ == '__main__':
       default=100,
       help='How many items to train with at once',)
   parser.add_argument(
-      '--summaries_dir',
+      '--parent_output_dir',
       type=str,
-      default='/tmp/retrain_logs',
-      help='Where to save summary logs for TensorBoard.')
+      default='/tmp/',
+      help='Directory name - underwhich event logs and checkpoint are written.')
   parser.add_argument(
       '--wanted_words',
       type=str,
