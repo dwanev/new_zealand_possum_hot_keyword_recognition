@@ -9,6 +9,7 @@ This project was developed to test the feasibility of detection New Zealand poss
 This is important as once an area is believed to be clears it must be monitored. There is also the problem of locating the last few individuals in sometimes very dense remote bush.
 This means detection at distance is very important and useful. 
  
+The paper describing the experiments and findings can be found here : https://github.com/DwanevanderSluis/new_zealand_possum_hot_keyword_recognition/blob/develop/paper/PossumGroupProject.pdf  
 
 **To train a model and save it to disk use:**
 
