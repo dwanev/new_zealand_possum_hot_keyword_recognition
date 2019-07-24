@@ -4,6 +4,10 @@ Dwane van der Sluis     17127987     ucabdv1@ucl.ac.uk\
 Richard Sterry          17115509     filip.svoboda.17@ucl.ac.uk \
 Filip Svoboda           17044637     filip.svoboda.17@ucl.ac.uk \
 Hadrien de Vaucleroy    13034248     hadrien.vaucleroy.17@ucl.ac.uk             
+
+This project was developed to test the feasibility of detection New Zealand possums by their calls against the backgroud noise of other animals (Cate, Dogs, NZ Bird life).
+This is important as once an area is believed to be clears it must be monitored. There is also the problem of locating the last few individuals in sometimes very dense remote bush.
+This means detection at distance is very important and useful. 
  
 
 **To train a model and save it to disk use:**
