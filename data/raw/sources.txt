@@ -1,0 +1,42 @@
+
+Australian National Film and Sound Archive : nfsa.gov.au
+
+http://colsearch.nfsa.gov.au/nfsa/search/display/display.w3p;adv=;group=;groupequals=;holdingType=;page=0;parentid=;query=Id%3A%221242571%22%7CId%3A%221224941%22%7CId%3A%221224946%22;querytype=;rec=0;resCount=3
+
+Title No: 1242571
+Title: [BAYLIS, A.H. : UTOPIA BIRDS AND ANIMALS : FIELD RECORDINGS] : [MAMMALS]
+Recorded Date: 2006 - 2013
+Produced as: Actuality; Field recording
+Categories: Environmental sounds; Historical; Wildlife
+Media: Sound Recording, Unpublished
+Summary:  Content: 1. 061106 2334 Common Brushtail Possum (Trichosurus vulpecula) -- 2. 070317 2230 Dingo (Canis lupus dingo) -- 3. 1312092311 Common Brushtail Possum (Trichosurus vulpecula) -- General note: Species are listed with their common name, followed by scientific name in brackets. For more information please see documentation in master title version.
+Country of Origin: Australia
+Language: English
+
+
+http://colsearch.nfsa.gov.au/nfsa/search/display/display.w3p;adv=;group=;groupequals=;holdingType=;page=0;parentid=;query=Id%3A%221242571%22%7CId%3A%221224941%22%7CId%3A%221224946%22;querytype=;rec=1;resCount=3
+
+Title No: 1224941
+Title: [POWYS, V. : WILDLIFE SOUNDS DATABASE 2] : [000.MAMMALS. BRUSHTAIL POSSUM]
+Release Date: 2012
+Produced as: Actuality; Field recording
+Categories: Environmental sounds; Wildlife
+Media: Sound Recording, Unpublished
+Summary:  Content: 1. A1.cb.possum.058 -- 2. A2.cb.possum.064 -- 3. A3.cb.possum.064 -- 4. A4.cb.possum.ls2531 -- 5. A5.cb.possum.ls2704 -- 6. A6.cb.possum.ls3177 -- 7. A7.cb.possum.ls3523 -- 8. A8.cb.possum.ls3553 -- 9. A9.cb.possum.ls3644 -- 10. B1.cb.possum.ls3840 -- 11. C1.cb.possum.ls0250 -- 12. C2.cb.possum.ls0341 -- 13. C3.cb.possum.ls0365 -- 14. D1.cb.possum.ls1531 -- 15. D2.cb.possum.ls1576 -- 16. D3.cb.possum.t909 -- General Note: For more details on the recordings please see documents in master title.
+Country of Origin: Australia
+Language: English
+
+
+http://colsearch.nfsa.gov.au/nfsa/search/display/display.w3p;adv=;group=;groupequals=;holdingType=;page=0;parentid=;query=Id%3A%221242571%22%7CId%3A%221224941%22%7CId%3A%221224946%22;querytype=;rec=2;resCount=3
+Title Details
+Title No: 1224946
+Title: [POWYS, V. : WILDLIFE SOUNDS DATABASE 2] : [000.MAMMALS. RING TAIL POSSUM]
+Release Date: 2012
+Produced as: Actuality; Field recording
+Categories: Environmental sounds; Wildlife
+Media: Sound Recording, Unpublished
+Summary:  Content: 1. Ri1.ring possum.ls2581 -- 2. Ri2.possum.t914 -- General Note: For more details on the recordings please see documents in master title.
+Country of Origin: Australia
+Language: English
+These digital items are provided for research purposes only and can not be reproduced without the prior consent of the National Film and Sound Archive. See copyright for more information.
+(No possums were heard in these recordings)

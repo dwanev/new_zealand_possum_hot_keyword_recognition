@@ -71,6 +71,9 @@ def create_pretty_conf_matrix_and_save(labels, conf_arr, filename):
 
     fig = plt.figure()
     plt.clf()
+
+    plt.hist
+
     ax = fig.add_subplot(111)
     ax.set_aspect(1)
     res = ax.imshow(np.array(norm_conf), cmap=rvb,  # plt.cm.RdYlGn,

@@ -27,6 +27,7 @@ simple_audio/tensorflow/examples/speech_commands/train.py --data_url= \
 **To take a model and 'freeze' it so it can be used in realtime inferencing use:**
 
 simple_audio.tensorflow.examples.speech_commands.freeze.py
+which saves the last trained network as \tmp\my_frozen_graph.pb
 
 **To run real-time inference use:**
 
@@ -45,6 +46,7 @@ Code to create spectrograms is in / spectrograms
 
 tf-nightly (r1.5)
 python 3.6.2
+pyaudio
 
 **iOS Setup**
 

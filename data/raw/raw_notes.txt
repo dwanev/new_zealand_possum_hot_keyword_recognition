@@ -1,0 +1,14 @@
+
+
+
+conv and Adam with
+
+%run simple_audio/tensorflow/examples/speech_commands/train_adam.py --data_url= \
+    --data_dir=/project/possum_project/dataset_v2/ \
+    --wanted_words=possum,cat,dog,bird --clip_duration_ms=2000 \
+    --train_dir=/project/possum_project/tmp/v2_conv_adam_base_commands_train/ \
+    --summaries_dir=/project/possum_project/tmp/v2_conv_adam_base_retrain_logs \
+    --learning_rate=0.001,0.0001 \
+    --how_many_training_steps=1000,1000 \
+    --unknown_percentage=30.0 \
+    --model_architecture=conv

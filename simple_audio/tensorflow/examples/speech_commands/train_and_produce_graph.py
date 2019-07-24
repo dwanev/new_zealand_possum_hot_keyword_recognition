@@ -83,7 +83,7 @@ import tensorflow as tf
 import simple_audio.tensorflow.examples.speech_commands.input_data as input_data
 import simple_audio.tensorflow.examples.speech_commands.models as models
 from tensorflow.python.platform import gfile
-from simple_audio.tensorflow.examples.speech_commands.plot_confusion_matrix import get_precision_and_recall_from_confusion_matrix
+# Basic module for extracting Tensorflow log data
 import simple_audio.tensorflow.examples.speech_commands.extract_tf_logs as etl
 
 FLAGS = None
@@ -156,12 +156,8 @@ def main(_):
   with tf.name_scope('train'), tf.control_dependencies(control_dependencies):
     learning_rate_input = tf.placeholder(
         tf.float32, [], name='learning_rate_input')
-  if (FLAGS.optimizer == 'sgd'):
-      train_step = tf.train.GradientDescentOptimizer(
-          learning_rate_input).minimize(cross_entropy_mean)
-  else:
-      train_step = tf.train.AdamOptimizer().minimize(cross_entropy_mean)
-
+    train_step = tf.train.GradientDescentOptimizer(
+        learning_rate_input).minimize(cross_entropy_mean)
   predicted_indices = tf.argmax(logits, 1)
   expected_indices = tf.argmax(ground_truth_input, 1)
   correct_prediction = tf.equal(predicted_indices, expected_indices)
@@ -203,13 +199,15 @@ def main(_):
   tf.global_variables_initializer().run()
 
   start_step = 1
-  terminate_now = False
 
   if FLAGS.start_checkpoint:
     models.load_variables_from_checkpoint(sess, FLAGS.start_checkpoint)
     start_step = global_step.eval(session=sess)
 
   tf.logging.info('Training from step: %d ', start_step)
+
+
+  # parent_train_dir = FLAGS.train_dir
 
   # Save graph.pbtxt.
   tf.train.write_graph(sess.graph_def, parent_train_dir,
@@ -285,28 +283,13 @@ def main(_):
       tf.logging.info('Step %d: Validation accuracy = %.1f%% (N=%d)' %
                       (training_step, total_accuracy * 100, set_size))
 
-      if (FLAGS.index_of_early_termination_class >= 0):
-          recall, precision = get_precision_and_recall_from_confusion_matrix(total_conf_matrix, FLAGS.index_of_early_termination_class)
-          tf.logging.info('Summary: Step:%d Class %d Recall:%.2f Class %d Precision: %.2f Validation Accuracy:%.2f' % (training_step,FLAGS.index_of_early_termination_class, recall,FLAGS.index_of_early_termination_class, precision, total_accuracy))
-          if precision > 0.999 and recall > 0.5:
-              tf.logging.info('Terminating early Precision: %.2f ' % (precision))
-              terminate_now = True
-
     # Save the model checkpoint periodically.
     if (training_step % FLAGS.save_step_interval == 0 or
-        training_step == training_steps_max or terminate_now):
+        training_step == training_steps_max):
       checkpoint_path = os.path.join(parent_train_dir,
                                      FLAGS.model_architecture + '.ckpt')
       tf.logging.info('Saving to "%s-%d"', checkpoint_path, training_step)
       saver.save(sess, checkpoint_path, global_step=training_step)
-
-    # Early termination
-    if terminate_now:
-        checkpoint_path = os.path.join(parent_train_dir,
-                                       FLAGS.model_architecture + '.ckpt')
-        tf.logging.info('Saving to "%s-%d"', checkpoint_path, training_step)
-        saver.save(sess, checkpoint_path, global_step=training_step)
-        break
 
   set_size = audio_processor.set_size('testing')
   tf.logging.info('set_size=%d', set_size)
@@ -334,18 +317,16 @@ def main(_):
   tf.logging.info('Flags: %s ', FLAGS)
   t2 = time.time()
   tf.logging.info('running time %d sec',((t2-t1)/60.0))
-  # parse event logs and produce error graphs
   etl.plot_loss_and_accuracy(FLAGS.parent_output_dir + '/' + FLAGS.model_architecture)
 
 
 if __name__ == '__main__':
-  parser = argparse.ArgumentParser()
-  parser.add_argument(
-      '--index_of_early_termination_class',
-      type=int,
-      default=2,
-      help='index in the class array, of the class that if we get 100% precision and recall we terminate')
+  output_folder_stub = 'possum_3'
+  output_folder_logs = '/tmp/'+output_folder_stub + "_retrain_logs"
+  #v_train_dir = "/tmp/" + output_folder_stub + "_train/"
+  #v_summaries_dir = "/tmp/" + output_folder_stub + "_retrain_logs"
 
+  parser = argparse.ArgumentParser()
   parser.add_argument(
       '--data_url',
       type=str,
@@ -359,13 +340,6 @@ if __name__ == '__main__':
       default='/tmp/dataset_v2/',
       help="""\
       Where to download the speech training data to.
-      """)
-  parser.add_argument(
-      '--optimizer',
-      type=str,
-      default='adam',
-      help="""\
-      adam or sgd
       """)
   parser.add_argument(
       '--background_volume',
@@ -438,21 +412,10 @@ if __name__ == '__main__':
       default=40,
       help='How many bins to use for the MFCC fingerprint',)
   parser.add_argument(
-      '--how_many_training_steps',
-      type=str,
-      default='100,1000,10000', # was 15000,3000
-      help='How many training loops to run',)
-  parser.add_argument(
       '--eval_step_interval',
       type=int,
       default=100,
       help='How often to evaluate the training results.')
-  parser.add_argument(
-      '--learning_rate',
-      type=str,
-      #default='0.001,0.0001',
-      default='0.1,0.001,0.001',
-      help='How large a learning rate to use when training.')
   parser.add_argument(
       '--batch_size',
       type=int,
@@ -470,11 +433,6 @@ if __name__ == '__main__':
       default='possum,cat,dog,bird',
       help='Words to use (others will be added to an unknown label)',)
   parser.add_argument(
-      '--train_dir',
-      type=str,
-      default='/tmp/speech_commands_train',
-      help='Directory to write event logs and checkpoint.')
-  parser.add_argument(
       '--save_step_interval',
       type=int,
       default=100,
@@ -487,15 +445,30 @@ if __name__ == '__main__':
   parser.add_argument(
       '--check_nans',
       type=bool,
-      default=True,
+      default=False,
       help='Whether to check for invalid numbers during processing')
+  parser.add_argument(
+      '--learning_rate',
+      type=str,
+      #default='0.01,0.01,0.001,0.0005',
+      default='0.01',
+      help='How large a learning rate to use when training.')
+  parser.add_argument(
+      '--how_many_training_steps',
+      type=str,
+      #default='400,1000,2800,15000',
+      default='2',
+      help='How many training loops to run',)
   parser.add_argument(
       '--model_architecture',
       type=str,
-      default='conv',
+      #default='conv',
       #default='alexnet_v01',
-      #default='deepear_v01',
+      default='deepear_v01',
       help='What model architecture to use')
 
   FLAGS, unparsed = parser.parse_known_args()
   tf.app.run(main=main, argv=[sys.argv[0]] + unparsed)
+
+
+
